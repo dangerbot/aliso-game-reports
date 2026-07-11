@@ -109,6 +109,7 @@
         }
 
         var meta = '<div class="g-meta"><span class="g-date">' + esc(g.date || "") + '</span>';
+        if(g.time){ meta += '<span class="g-dot"></span><span class="g-date">' + esc(g.time) + '</span>'; }
         if(g.venue){ meta += '<span class="g-dot"></span><span class="g-venue">' + esc(g.venue) + '</span>'; }
         if(result){ meta += result; }
         meta += '</div>';
