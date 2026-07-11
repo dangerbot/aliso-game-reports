@@ -16,5 +16,15 @@
     "us": 65,
     "them": 37,
     "file": "games/2026-0710-1010-aliso-vs-foothill.html"
-  }
+  },
+  {
+  "title": "Aliso vs Edison",
+  "date": "2026-07-11",
+  "time": "1:30 PM",
+  "venue": "Corona Del Mar HS",
+  "us": 76,
+  "them": 37,
+  "file": "games/2026-0711-1330-aliso-vs-edison.html"
+}
+
 ]
