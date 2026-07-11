@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Game Reports — Upload &amp; Share</title>
+<title>Aliso Basketball — Game Reports</title>
 <style>
   :root{ color-scheme: dark; }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -11,360 +11,118 @@
     --bg:#0d1420; --panel:#151d2c; --panel2:#1b2536;
     --line:#26324a; --ink:#eef2f8; --muted:#93a1b8; --muted2:#6b7994;
     --teal:#2dd4bf; --teal-ink:#04211d; --gold:#e0a53a; --gold-ink:#231704;
-    --danger:#f0776b; --ok:#2dd4bf;
+    --win:#2dd4bf; --loss:#f0776b;
     --shadow:0 12px 40px rgba(0,0,0,.28);
     background:var(--bg);color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     min-height:100vh;padding:22px 16px 60px;
-    display:flex;flex-direction:column;align-items:center;gap:20px;
+    display:flex;flex-direction:column;align-items:center;
   }
-  a{color:var(--teal)}
-  .wrap{width:100%;max-width:560px;display:flex;flex-direction:column;gap:18px}
+  .wrap{width:100%;max-width:620px;display:flex;flex-direction:column;gap:18px}
 
-  /* Header */
   .head{
     background:linear-gradient(135deg,color-mix(in srgb,var(--teal) 24%,transparent),transparent 58%),var(--panel);
-    border:1px solid var(--line);border-radius:16px;padding:22px 22px;box-shadow:var(--shadow);
+    border:1px solid var(--line);border-radius:16px;padding:24px 22px;box-shadow:var(--shadow);
   }
   .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
-  h1{font-size:23px;font-weight:800;letter-spacing:.01em;margin-top:8px;line-height:1.15}
-  .sub{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
+  h1{font-size:25px;font-weight:800;letter-spacing:.01em;margin-top:8px;line-height:1.12}
+  .sub{font-size:13px;color:var(--muted);margin-top:9px;line-height:1.5}
+  .count{font-size:12px;color:var(--muted2);margin-top:12px;font-weight:600}
 
-  /* Cards */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
-  .card h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:14px}
-
-  label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:0 0 6px}
-  input[type=text]{
-    width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
-    color:var(--ink);font-size:15px;padding:12px 13px;font-family:inherit;
+  .games{display:flex;flex-direction:column;gap:11px}
+  a.game{
+    display:block;text-decoration:none;color:inherit;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;box-shadow:var(--shadow);transition:border-color .15s,transform .1s;
   }
-  input[type=text]:focus{outline:none;border-color:var(--teal)}
-  .field + .field{margin-top:14px}
+  a.game:hover{border-color:color-mix(in srgb,var(--teal) 45%,var(--line))}
+  a.game:active{transform:scale(.995)}
+  .g-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .g-teams{font-size:16px;font-weight:800;letter-spacing:.01em}
+  .g-score{font-size:15px;font-weight:800;white-space:nowrap}
+  .g-score .us{color:var(--teal)}
+  .g-score .them{color:var(--muted)}
+  .g-meta{display:flex;align-items:center;gap:9px;margin-top:7px;flex-wrap:wrap}
+  .g-date{font-size:12px;color:var(--muted2);font-weight:600}
+  .g-dot{width:3px;height:3px;border-radius:50%;background:var(--muted2)}
+  .g-venue{font-size:12px;color:var(--muted2)}
+  .tag{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+  .tag.w{color:var(--win);border:1px solid color-mix(in srgb,var(--win) 40%,transparent)}
+  .tag.l{color:var(--loss);border:1px solid color-mix(in srgb,var(--loss) 40%,transparent)}
 
-  /* Drop zone */
-  .drop{
-    border:1.5px dashed var(--line);border-radius:13px;background:var(--panel2);
-    padding:26px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;
+  .empty,.loading{
+    text-align:center;color:var(--muted2);font-size:14px;padding:34px 16px;line-height:1.6;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
   }
-  .drop.hot{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 8%,var(--panel2))}
-  .drop .big{font-size:15px;font-weight:700;margin-bottom:5px}
-  .drop .small{font-size:12px;color:var(--muted2)}
-  .drop .chosen{color:var(--teal);font-weight:700}
-  input[type=file]{display:none}
-
-  button{
-    font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;border:none;border-radius:11px;
-    padding:13px 16px;width:100%;transition:filter .15s,opacity .15s;
-  }
-  .btn-go{background:var(--teal);color:var(--teal-ink);margin-top:16px}
-  .btn-go:hover{filter:brightness(1.06)}
-  .btn-go:disabled{opacity:.45;cursor:not-allowed;filter:none}
-  .btn-ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
-
-  /* Result */
-  .result{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
-  .result.show{display:block}
-  .linkrow{display:flex;gap:8px;margin-top:8px}
-  .linkrow input{flex:1;font-size:13px}
-  .linkrow button{width:auto;padding:12px 15px;font-size:13px}
-  .msg{font-size:13px;margin-top:12px;padding:11px 13px;border-radius:9px;display:none}
-  .msg.show{display:block}
-  .msg.err{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)}
-  .msg.ok{background:color-mix(in srgb,var(--teal) 12%,transparent);color:var(--teal);border:1px solid color-mix(in srgb,var(--teal) 32%,transparent)}
-  .busy{opacity:.6;pointer-events:none}
-
-  /* Games list */
-  .games{display:flex;flex-direction:column;gap:9px}
-  .game{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
-  }
-  .game .gname{font-size:14px;font-weight:700}
-  .game .gdate{font-size:11px;color:var(--muted2);margin-top:2px}
-  .game .gact{display:flex;gap:7px;flex-shrink:0}
-  .game .gact button{width:auto;padding:8px 11px;font-size:12px;font-weight:700}
-  .empty{font-size:13px;color:var(--muted2);text-align:center;padding:14px 0}
-
-  /* Settings */
-  details.settings{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
-  details.settings summary{
-    list-style:none;cursor:pointer;padding:14px 18px;font-size:12px;font-weight:700;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center;
-  }
-  details.settings summary::-webkit-details-marker{display:none}
-  details.settings summary::after{content:"▾";color:var(--muted2)}
-  details.settings[open] summary::after{content:"▴"}
-  .settings-body{padding:0 18px 18px}
-  .settings-note{font-size:12px;color:var(--muted2);line-height:1.5;margin-top:12px}
-  .foot{font-size:11px;color:var(--muted2);text-align:center;line-height:1.6;padding:4px 8px}
-  .pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);border-radius:20px;padding:3px 9px;margin-top:12px}
+  .err{color:var(--loss);font-size:13px;padding:18px;background:var(--panel);border:1px solid color-mix(in srgb,var(--loss) 30%,transparent);border-radius:14px;line-height:1.5}
+  .foot{font-size:11px;color:var(--muted2);text-align:center;line-height:1.6;padding:8px;margin-top:2px}
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <div class="head">
     <div class="eyebrow">Hoop Rhythm</div>
-    <h1>Post a game report</h1>
-    <div class="sub">Drop in the HTML report, get a link you can text or share. Viewers see the full interactive report — no login.</div>
-    <div class="pill" id="setupPill" style="display:none">Add your keys in Settings to start</div>
+    <h1>Aliso Basketball</h1>
+    <div class="sub">Game reports — tap any game for the full breakdown.</div>
+    <div class="count" id="count"></div>
   </div>
 
-  <!-- Upload -->
-  <div class="card" id="uploadCard">
-    <h2>New report</h2>
-
-    <div class="field">
-      <label for="gameName">Game name (shows in your list)</label>
-      <input type="text" id="gameName" placeholder="Aliso vs NH — Jul 10" autocomplete="off">
-    </div>
-
-    <div class="field" style="margin-top:16px">
-      <label>Report file</label>
-      <div class="drop" id="drop">
-        <div class="big" id="dropBig">Tap to choose the HTML file</div>
-        <div class="small" id="dropSmall">or drag it here</div>
-      </div>
-      <input type="file" id="file" accept=".html,text/html">
-    </div>
-
-    <button class="btn-go" id="go" disabled>Upload &amp; get link</button>
-
-    <div class="msg" id="msg"></div>
-
-    <div class="result" id="result">
-      <label>Shareable link</label>
-      <div class="linkrow">
-        <input type="text" id="link" readonly>
-        <button class="btn-go" style="margin:0" id="copy">Copy</button>
-      </div>
-      <button class="btn-ghost" id="openLink" style="margin-top:9px">Open report</button>
-    </div>
+  <div class="games" id="games">
+    <div class="loading">Loading games…</div>
   </div>
 
-  <!-- Games -->
-  <div class="card">
-    <h2>Your games</h2>
-    <div class="games" id="games"><div class="empty">No reports yet. Upload one above.</div></div>
-  </div>
-
-  <!-- Settings -->
-  <details class="settings" id="settings">
-    <summary>Settings — Supabase connection</summary>
-    <div class="settings-body">
-      <div class="field">
-        <label for="sbUrl">Supabase Project URL</label>
-        <input type="text" id="sbUrl" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="field">
-        <label for="sbKey">Supabase anon key</label>
-        <input type="text" id="sbKey" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
-      </div>
-      <div class="field">
-        <label for="sbBucket">Bucket name</label>
-        <input type="text" id="sbBucket" placeholder="reports" autocomplete="off" spellcheck="false">
-      </div>
-      <button class="btn-go" id="saveSettings">Save on this phone</button>
-      <div class="settings-note">
-        These stay on this device only (never uploaded anywhere). The anon key is safe to use in a browser.
-        Find both values in Supabase → Project Settings → API.
-      </div>
-    </div>
-  </details>
-
-  <div class="foot">
-    Files are stored in your Supabase project and served from its CDN.<br>
-    Your game list lives on this phone. Uploading from a new device? Your links still work — re-add them or just keep the text.
-  </div>
-
+  <div class="foot">Updated as games are added · Hoop Rhythm Tracker</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   "use strict";
-  var LS_CFG = "hoopUploadCfg";
-  var LS_GAMES = "hoopUploadGames";
+  var box = document.getElementById("games");
+  var countEl = document.getElementById("count");
 
-  var el = function(id){ return document.getElementById(id); };
-  var cfg = load(LS_CFG) || {};
-  var games = load(LS_GAMES) || [];
-  var chosenFile = null;
-  var client = null;
+  fetch("games.json", { cache: "no-cache" })
+    .then(function(r){ if(!r.ok) throw new Error("games.json not found"); return r.json(); })
+    .then(function(list){
+      if(!Array.isArray(list) || !list.length){
+        box.innerHTML = '<div class="empty">No games posted yet.<br>Add one to <b>games.json</b> to see it here.</div>';
+        return;
+      }
+      // newest first by date string if present, else keep file order
+      list.sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+      countEl.textContent = list.length + (list.length === 1 ? " game" : " games") + " this season";
+      box.innerHTML = "";
+      list.forEach(function(g){
+        var a = document.createElement("a");
+        a.className = "game";
+        a.href = g.file;
+        a.rel = "noopener";
 
-  // ---- init settings fields ----
-  el("sbUrl").value = cfg.url || "";
-  el("sbKey").value = cfg.key || "";
-  el("sbBucket").value = cfg.bucket || "reports";
+        var result = "";
+        if(typeof g.us === "number" && typeof g.them === "number"){
+          var won = g.us > g.them;
+          result = '<span class="tag ' + (won ? "w" : "l") + '">' + (won ? "Win" : "Loss") + '</span>';
+        }
 
-  function haveCfg(){ return cfg.url && cfg.key && cfg.bucket; }
+        var score = "";
+        if(typeof g.us === "number" && typeof g.them === "number"){
+          score = '<div class="g-score"><span class="us">' + g.us + '</span> <span class="them">– ' + g.them + '</span></div>';
+        }
 
-  function makeClient(){
-    if(!haveCfg()) return null;
-    try { return window.supabase.createClient(cfg.url, cfg.key); }
-    catch(e){ return null; }
-  }
-  client = makeClient();
-  reflectSetupState();
+        var meta = '<div class="g-meta"><span class="g-date">' + esc(g.date || "") + '</span>';
+        if(g.venue){ meta += '<span class="g-dot"></span><span class="g-venue">' + esc(g.venue) + '</span>'; }
+        if(result){ meta += result; }
+        meta += '</div>';
 
-  function reflectSetupState(){
-    if(haveCfg()){
-      el("setupPill").style.display = "none";
-    } else {
-      el("setupPill").style.display = "inline-block";
-      el("settings").open = true;
-    }
-    refreshGoState();
-  }
-
-  // ---- settings save ----
-  el("saveSettings").addEventListener("click", function(){
-    var url = el("sbUrl").value.trim().replace(/\/+$/,"");
-    var key = el("sbKey").value.trim();
-    var bucket = el("sbBucket").value.trim() || "reports";
-    if(!url || !key){ flash("Enter both the Project URL and anon key.", "err"); return; }
-    cfg = { url:url, key:key, bucket:bucket };
-    save(LS_CFG, cfg);
-    client = makeClient();
-    el("settings").open = false;
-    reflectSetupState();
-    flash("Connection saved on this phone.", "ok");
-  });
-
-  // ---- file choosing ----
-  var drop = el("drop"), fileInput = el("file");
-  drop.addEventListener("click", function(){ fileInput.click(); });
-  drop.addEventListener("dragover", function(e){ e.preventDefault(); drop.classList.add("hot"); });
-  drop.addEventListener("dragleave", function(){ drop.classList.remove("hot"); });
-  drop.addEventListener("drop", function(e){
-    e.preventDefault(); drop.classList.remove("hot");
-    if(e.dataTransfer.files && e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-  });
-  fileInput.addEventListener("change", function(){
-    if(fileInput.files && fileInput.files[0]) setFile(fileInput.files[0]);
-  });
-
-  function setFile(f){
-    if(!/\.html?$/i.test(f.name) && f.type !== "text/html"){
-      flash("That doesn't look like an HTML report. Pick the .html file.", "err");
-      return;
-    }
-    chosenFile = f;
-    el("dropBig").innerHTML = '<span class="chosen">' + escapeHtml(f.name) + '</span>';
-    el("dropSmall").textContent = Math.round(f.size/1024) + " KB · tap to change";
-    if(!el("gameName").value.trim()){
-      el("gameName").value = f.name.replace(/\.html?$/i,"").replace(/[_-]+/g," ");
-    }
-    refreshGoState();
-  }
-
-  function refreshGoState(){ el("go").disabled = !(chosenFile && haveCfg()); }
-
-  // ---- upload ----
-  el("go").addEventListener("click", function(){
-    if(!chosenFile || !client) return;
-    var name = el("gameName").value.trim() || chosenFile.name.replace(/\.html?$/i,"");
-    var path = slug(name) + "-" + Date.now().toString(36) + ".html";
-
-    setBusy(true);
-    flash("Uploading…", "ok");
-
-    chosenFile.arrayBuffer().then(function(buf){
-      // Wrap in a typed Blob so the content-type is pinned to HTML.
-      // Uploading a raw buffer lets Supabase mis-detect it as text/plain,
-      // which makes the browser show source instead of rendering the page.
-      var blob = new Blob([buf], { type: "text/html; charset=utf-8" });
-      return client.storage.from(cfg.bucket).upload(path, blob, {
-        contentType: "text/html; charset=utf-8",
-        cacheControl: "3600",
-        upsert: false
+        a.innerHTML =
+          '<div class="g-top"><div class="g-teams">' + esc(g.title || "Game") + '</div>' + score + '</div>' + meta;
+        box.appendChild(a);
       });
-    }).then(function(res){
-      if(res.error) throw res.error;
-      var pub = client.storage.from(cfg.bucket).getPublicUrl(path);
-      var url = pub.data.publicUrl;
-      addGame({ name:name, url:url, path:path, ts:Date.now() });
-      showResult(url);
-      flash("Uploaded. Link is ready below.", "ok");
-      resetPicker();
-    }).catch(function(err){
-      flash(uploadError(err), "err");
-    }).finally(function(){
-      setBusy(false);
+    })
+    .catch(function(e){
+      box.innerHTML = '<div class="err">Couldn\'t load the game list (' + esc(e.message) + ').<br>Make sure <b>games.json</b> exists in the repo root.</div>';
     });
-  });
 
-  function uploadError(err){
-    var m = (err && (err.message || err.error || err.name)) || "Upload failed.";
-    if(/exists/i.test(m)) return "A file with that name already exists — rename the game and try again.";
-    if(/row-level|policy|unauthor|permission/i.test(m)) return "Storage policy blocked the upload. Check the bucket name and that the upload policy is in place (see setup notes).";
-    if(/bucket/i.test(m) && /not found/i.test(m)) return "Bucket not found. Create it in Supabase or fix the bucket name in Settings.";
-    if(/failed to fetch|network/i.test(m)) return "Network error — check the Project URL and your connection.";
-    return m;
-  }
-
-  function showResult(url){
-    el("link").value = url;
-    el("result").classList.add("show");
-    el("openLink").onclick = function(){ window.open(url, "_blank"); };
-  }
-  el("copy").addEventListener("click", function(){
-    var i = el("link"); i.select(); i.setSelectionRange(0, 99999);
-    var done = function(){ el("copy").textContent = "Copied"; setTimeout(function(){ el("copy").textContent = "Copy"; }, 1400); };
-    if(navigator.clipboard) navigator.clipboard.writeText(i.value).then(done, done); else { document.execCommand("copy"); done(); }
-  });
-
-  function resetPicker(){
-    chosenFile = null; fileInput.value = "";
-    el("dropBig").textContent = "Tap to choose the HTML file";
-    el("dropSmall").textContent = "or drag it here";
-    el("gameName").value = "";
-    refreshGoState();
-  }
-
-  // ---- games list ----
-  function addGame(g){ games.unshift(g); save(LS_GAMES, games); renderGames(); }
-  function renderGames(){
-    var box = el("games");
-    if(!games.length){ box.innerHTML = '<div class="empty">No reports yet. Upload one above.</div>'; return; }
-    box.innerHTML = "";
-    games.forEach(function(g, idx){
-      var row = document.createElement("div"); row.className = "game";
-      var left = document.createElement("div");
-      left.innerHTML = '<div class="gname">' + escapeHtml(g.name) + '</div><div class="gdate">' + fmtDate(g.ts) + '</div>';
-      var act = document.createElement("div"); act.className = "gact";
-      var cp = document.createElement("button"); cp.className = "btn-ghost"; cp.textContent = "Copy";
-      cp.onclick = function(){ copyText(g.url, cp); };
-      var op = document.createElement("button"); op.className = "btn-ghost"; op.textContent = "Open";
-      op.onclick = function(){ window.open(g.url, "_blank"); };
-      var rm = document.createElement("button"); rm.className = "btn-ghost"; rm.textContent = "✕";
-      rm.title = "Remove from this list (doesn't delete the file)";
-      rm.onclick = function(){ games.splice(idx,1); save(LS_GAMES, games); renderGames(); };
-      act.appendChild(cp); act.appendChild(op); act.appendChild(rm);
-      row.appendChild(left); row.appendChild(act);
-      box.appendChild(row);
-    });
-  }
-  renderGames();
-
-  function copyText(txt, btn){
-    var done = function(){ var t=btn.textContent; btn.textContent="Copied"; setTimeout(function(){ btn.textContent=t; },1200); };
-    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done, done); else done();
-  }
-
-  // ---- helpers ----
-  function flash(text, kind){
-    var m = el("msg"); m.textContent = text; m.className = "msg show " + (kind||"");
-    if(kind === "ok" && !/Uploading/.test(text)) setTimeout(function(){ m.classList.remove("show"); }, 3500);
-  }
-  function setBusy(b){ el("uploadCard").classList.toggle("busy", b); el("go").textContent = b ? "Uploading…" : "Upload & get link"; }
-  function slug(s){ return (s||"game").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,48) || "game"; }
-  function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
-  function fmtDate(ts){ try{ return new Date(ts).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }catch(e){ return ""; } }
-  function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-  function load(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 })();
 </script>
 </body>
