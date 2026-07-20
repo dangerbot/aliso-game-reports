@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aliso Basketball — Game Reports</title>
+<title>Aliso Basketball — Unofficial Game Reports</title>
 <style>
   :root{ color-scheme: dark; }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -55,13 +55,21 @@
     background:var(--panel);border:1px solid var(--line);border-radius:14px;
   }
   .err{color:var(--loss);font-size:13px;padding:18px;background:var(--panel);border:1px solid color-mix(in srgb,var(--loss) 30%,transparent);border-radius:14px;line-height:1.5}
+
+  a.applink{
+    display:block;text-align:center;text-decoration:none;color:var(--teal-ink);
+    background:var(--teal);border-radius:13px;padding:14px 16px;
+    font-size:15px;font-weight:800;box-shadow:var(--shadow);
+  }
+  a.applink:hover{filter:brightness(1.06)}
+  .notes{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;box-shadow:var(--shadow)}
+  .notes-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;margin-bottom:10px}
+  .notes ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px}
+  .notes li{font-size:13px;color:var(--muted);line-height:1.5}
+  .notes b{color:var(--ink)}
   .foot{font-size:11px;color:var(--muted2);text-align:center;line-height:1.6;padding:8px;margin-top:2px}
-  .app-btn{display:inline-block;font-size:12px;font-weight:700;color:var(--teal);border:1px solid color-mix(in srgb,var(--teal) 40%,transparent);border-radius:20px;padding:8px 20px;text-decoration:none;transition:background .15s,border-color .15s}
-  .app-btn:hover{background:color-mix(in srgb,var(--teal) 12%,transparent);border-color:var(--teal)}
-  .app-link{text-align:center;margin-top:4px}
-  .notes{font-size:11px;color:var(--muted2);line-height:1.7;padding:14px 18px;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;text-align:left}
-  .notes summary{cursor:pointer;font-weight:700;text-align:center}
-  .notes ol{margin:10px 0 0 18px}
 </style>
 </head>
 <body>
@@ -69,7 +77,7 @@
   <div class="head">
     <div class="eyebrow">Hoop Rhythm</div>
     <h1>Aliso Basketball</h1>
-    <div class="sub">Game reports — tap any game for the full breakdown.</div>
+    <div class="sub">Unofficial game reports — tap any game for the full breakdown.</div>
     <div class="count" id="count"></div>
   </div>
 
@@ -77,20 +85,21 @@
     <div class="loading">Loading games…</div>
   </div>
 
-  <div class="foot">Updated as games are added · Hoop Rhythm Tracker</div>
 
-  <div class="app-link"><a class="app-btn" href="https://hoop-rhythm-tracker.lovable.app" target="_blank" rel="noopener">Basketball Stat App</a></div>
+  <a class="applink" href="https://project-pass-back.lovable.app/">&#127936;&nbsp; Basketball Stat App</a>
 
-  <details class="notes">
-    <summary>Steve's Notes — How to Post a Game</summary>
+  <div class="notes">
+    <div class="notes-title">Steve&#39;s Notes &mdash; How to Post a Game</div>
     <ol>
       <li>Collect raw game stats (box score, play-by-play, etc.)</li>
       <li>Paste the data into Claude Code on your phone to generate the HTML report file</li>
       <li>Upload the HTML file to the <b>games/</b> folder on GitHub</li>
       <li>Update <b>games.json</b> with a new entry (title, date, time, venue, score, filename)</li>
-      <li>Commit — Vercel auto-deploys and this page picks up the new game</li>
+      <li>Commit &mdash; Vercel auto-deploys and this page picks up the new game</li>
     </ol>
-  </details>
+  </div>
+
+  <div class="foot">Updated as games are added · Hoop Rhythm Tracker</div>
 </div>
 
 <script>
