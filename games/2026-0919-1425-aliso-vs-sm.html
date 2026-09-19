@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=860">
+<title>Game Report</title>
+<style>
+  :root{ color-scheme: light; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body.dark{
+    --page:#0a101b; --bg:#0d1420; --panel:#151d2c; --panel2:#1b2536;
+    --line:#26324a; --ink:#eef2f8; --muted:#93a1b8; --muted2:#6b7994;
+    --teal:#2dd4bf; --teal-ink:#04211d; --gold:#e0a53a; --gold-ink:#231704;
+    --grid:#26324a; --axis:#48566f; --empty:#111a28; --barback:#26324a;
+    --shade:rgba(45,212,191,.12); --shadow:0 12px 40px rgba(0,0,0,.25);
+    --tealarea:rgba(45,212,191,.22); --goldarea:rgba(224,165,58,.16);
+  }
+  body.light{
+    --page:#eef1f5; --bg:#ffffff; --panel:#ffffff; --panel2:#f5f7fa;
+    --line:#bcc5d1; --ink:#0e1621; --muted:#2f3a48; --muted2:#48525f;
+    --teal:#0c7f73; --teal-ink:#ffffff; --gold:#a86c15; --gold-ink:#ffffff;
+    --grid:#d6dce4; --axis:#8b95a3; --empty:#e8ecf1; --barback:#dde3ea;
+    --shade:rgba(12,127,115,.13); --shadow:0 8px 26px rgba(30,45,70,.12);
+    --tealarea:rgba(12,127,115,.15); --goldarea:rgba(168,108,21,.15);
+  }
+  body{background:var(--page);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:18px;display:flex;flex-direction:column;align-items:center;gap:20px}
+  .sheet{width:820px;background:var(--bg);color:var(--ink);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+  .pad{padding:18px 26px}
+  .muted{color:var(--muted)} .muted2{color:var(--muted2)}
+  .teal{color:var(--teal)} .gold{color:var(--gold)}
+  .topbar{display:flex;gap:10px;justify-content:center;align-self:center;flex-wrap:wrap;margin-bottom:2px}
+  .topbtn{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:24px;padding:12px 22px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);text-decoration:none;display:inline-block;font-family:inherit}
+  .topbtn:hover{border-color:var(--teal)}
+  body.export .topbar{display:none}
+  .head{background:linear-gradient(135deg,color-mix(in srgb,var(--teal) 22%,transparent),transparent 55%),var(--bg);border-bottom:1px solid var(--line);padding:20px 26px}
+  .title{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .gameinfo{font-size:12px;color:var(--muted);font-weight:600;margin-top:6px}
+  .score-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+  .team{flex:1}
+  .team .name{font-size:15px;font-weight:800;letter-spacing:.04em}
+  .team .sub{font-size:11px;color:var(--muted2);margin-top:2px}
+  .team.away{text-align:right}
+  .pts{font-size:56px;font-weight:800;line-height:1}
+  .home .pts{color:var(--teal)} .away .pts{color:var(--gold)}
+  .mid{text-align:center;padding:0 18px}
+  .mid .vs{font-size:11px;letter-spacing:.2em;color:var(--muted2);font-weight:700}
+  .mid .result{margin-top:6px;font-size:12px;font-weight:700;color:var(--rc);background:color-mix(in srgb,var(--rc) 16%,transparent);border:1px solid color-mix(in srgb,var(--rc) 40%,transparent);border-radius:20px;padding:4px 12px;display:inline-block}
+  h2.sec{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);font-weight:700;margin:16px 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+  .card .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);font-weight:700}
+  .card .vals{display:flex;align-items:baseline;justify-content:space-between;margin-top:7px}
+  .card .v{font-size:22px;font-weight:800}
+  .card .v.t{color:var(--teal)} .card .v.g{color:var(--gold)}
+  .card .cap{font-size:10.5px;color:var(--muted);margin-top:6px;line-height:1.35}
+  .bar{height:7px;border-radius:4px;background:var(--gold);margin-top:8px;overflow:hidden;display:flex}
+  .bar > span{display:block;height:100%;background:var(--teal)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:5.5px 6px;text-align:center;border-bottom:1px solid var(--line)}
+  th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);font-weight:700}
+  td.lab{text-align:left;color:var(--muted);font-weight:600}
+  tr.home td{color:var(--teal)} tr.away td{color:var(--gold)}
+  tr.home td.lab,tr.away td.lab{color:var(--muted)}
+  .winq{background:var(--shade);border-radius:4px}
+  tr.divide td{border-top:2px solid var(--line)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+  .panelbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+  .legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+  .courtcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .courthd{font-size:12px;font-weight:800;letter-spacing:.03em;margin-bottom:4px;display:flex;justify-content:space-between;align-items:baseline}
+  .courthd .muted2{font-weight:600;font-size:10.5px}
+  .courtsvg{text-align:center}
+  .courtsvg svg{width:100%;max-width:270px;height:auto;display:inline-block}
+  .donuts{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+  .donut{text-align:center;flex:1}
+  .donut .qh{font-size:10px;color:var(--muted2);font-weight:700;letter-spacing:.08em;margin-bottom:4px}
+  .donut .pc{font-size:10px;margin-top:4px;font-weight:700}
+  .convrow{display:flex;justify-content:space-between;gap:10px;margin-top:8px;align-items:flex-end}
+  .convq{flex:1;text-align:center}
+  .convtrack{height:78px;display:flex;align-items:flex-end;justify-content:center;gap:5px}
+  .convbar{width:16px;border-radius:4px 4px 0 0;position:relative;display:flex;justify-content:center}
+  .convbar span{position:absolute;top:-14px;font-size:9.5px;font-weight:800}
+  .convbar.h{background:var(--teal)} .convbar.h span{color:var(--teal)}
+  .convbar.a{background:var(--gold)} .convbar.a span{color:var(--gold)}
+  .convq .qh{font-size:10px;color:var(--muted2);font-weight:700;margin-top:6px}
+  .foot{border-top:1px solid var(--line);padding:13px 26px;display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted2)}
+  .flow-intro{font-size:12.5px;line-height:1.5;color:var(--muted);margin-bottom:4px}
+  .qblock{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 14px;margin-bottom:8px}
+  .qbhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .qbhead .ql{font-size:13px;font-weight:800;letter-spacing:.04em}
+  .qbhead .qs{font-size:11px;color:var(--muted2);font-weight:600}
+  .qdiff{font-size:10px;color:var(--muted2);font-weight:600;margin-top:2px}
+  .qdiff b{font-size:12px;margin-left:2px}
+  .lanes{display:flex;align-items:center;gap:8px}
+  .lanetag{width:44px;flex:none;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--muted2)}
+  .lanetag .h{color:var(--teal)} .lanetag .a{color:var(--gold)}
+  .lanewrap{flex:1;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+  .lane{display:flex;gap:3px}
+  .cell{width:17px;height:17px;flex:none;border-radius:4px;background:var(--empty);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;line-height:1}
+  .cell.score.h{background:var(--teal);color:var(--teal-ink)}
+  .cell.score.a{background:var(--gold);color:var(--gold-ink)}
+  .cell.miss.h{background:transparent;border:1.5px solid color-mix(in srgb,var(--teal) 55%,transparent);color:color-mix(in srgb,var(--teal) 80%,var(--muted))}
+  .cell.miss.a{background:transparent;border:1.5px solid color-mix(in srgb,var(--gold) 55%,transparent);color:color-mix(in srgb,var(--gold) 80%,var(--muted))}
+  .cell.ev{background:color-mix(in srgb,var(--empty) 55%,transparent);font-size:9.5px}
+  .cell.ev.h{color:color-mix(in srgb,var(--teal) 78%,var(--muted))}
+  .cell.ev.a{color:color-mix(in srgb,var(--gold) 78%,var(--muted))}
+  .qbfoot{display:flex;justify-content:space-between;font-size:10px;color:var(--muted2);margin-top:7px}
+  .lgcell{display:inline-flex;width:17px;height:17px;border-radius:4px;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;vertical-align:middle;margin-right:5px}
+  .lgcell.lgev{background:color-mix(in srgb,var(--empty) 55%,transparent);color:var(--muted);border:1px solid var(--line)}
+  body.light .head{background:var(--bg)}
+  body.light .card,body.light .panelbox,body.light .courtcard,body.light .qblock{border-color:#b4bdc9}
+  body.light .title{color:#39424f}
+  body.light .cap{color:#3a4553;font-size:11px}
+  body.light table{font-size:14px}
+  body.light th,body.light td{padding:5px 6px}
+  body.light th{color:#455060}
+  body.light td.lab{color:#28323f}
+  body.light td.muted2,body.light .muted2{color:#313c4a}
+  body.light tbody td{font-weight:600}
+  body.light .cell{border:1px solid #cbd3dc;font-size:11px}
+  body.light .cell.ev{background:#e7ebf1}
+  body.light .cell.ev.h{color:var(--teal)}
+  body.light .cell.ev.a{color:var(--gold)}
+  body.light .lgcell.lgev{background:#e7ebf1;color:#39434f;border-color:#c3ccd6}
+  body.light .qbfoot,body.light .flow-intro,body.light .legend,body.light .foot{color:#3a4553}
+  @media print{
+    body{background:#fff;padding:0;gap:0}
+    .topbar{display:none}
+    .sheet{box-shadow:none;border-radius:0;page-break-after:always;transform-origin:top left}
+    .sheet:last-child{page-break-after:auto}
+    @page{size:Letter portrait;margin:8mm}
+  }
+</style>
+</head>
+<body class="dark" style="--rc:var(--teal)">
+<div class="topbar">
+  <a class="topbtn" href="https://aliso-varsity-game-reports.vercel.app/">&#9664;&nbsp; All Games</a>
+  <button id="toggle" class="topbtn">&#9728; Light mode</button>
+  <button id="copyraw" class="topbtn">&#9112; Copy Raw Data</button>
+</div>
+<script type="text/plain" id="rawevents"># Game: Aliso vs SM
+# Date: Saturday, September 19, 2026
+# Time: 2:25 PM
+# Venue: MAP Sports Facility
+# Home team: Aliso (HOME in the log)
+# Away team: SM (AWAY in the log)
+# Format: game-clock M:SS, TEAM, event
+0:00,HOME,Sub In (Will)
+0:00,HOME,Sub In (Henry)
+0:00,HOME,Sub In (Collin)
+0:00,HOME,Sub In (Miles)
+0:00,HOME,Sub In (Josh)
+0:33,AWAY,TO (forced)
+0:39,HOME,TO (unforced)
+1:05,AWAY,Missed 3
+1:06,HOME,Def Reb
+1:12,HOME,Missed 2
+1:13,AWAY,Def Reb
+1:22,AWAY,+2
+1:51,HOME,+3 (Collin)
+2:06,AWAY,+2
+2:19,HOME,+3 (Collin)
+2:19,AWAY,Foul
+2:19,HOME,FT Made (Collin)
+2:32,AWAY,TO (unforced)
+2:56,HOME,Missed 3
+2:58,HOME,Sub Out (Josh)
+3:00,HOME,Sub In (Josh)
+3:01,AWAY,Def Reb
+3:14,HOME,Foul
+3:31,HOME,Foul
+3:31,AWAY,FT Made
+3:31,AWAY,FT Made
+3:51,HOME,Missed 2
+3:52,AWAY,Def Reb
+3:57,HOME,Sub Out (Will)
+3:57,HOME,Sub In (Will)
+3:57,AWAY,TO (forced)
+4:25,HOME,Missed 3
+4:27,AWAY,Def Reb
+4:31,AWAY,Missed 2
+4:31,HOME,Def Reb
+4:55,HOME,+2 (Collin)
+5:00,AWAY,Missed 2
+5:01,HOME,Def Reb
+5:10,HOME,Missed 2
+5:10,HOME,Off Reb
+5:10,HOME,Sub Out (Henry)
+5:10,HOME,Sub In (Xia)
+5:10,HOME,Sub In (Mavric)
+5:10,HOME,Sub Out (Josh)
+5:17,HOME,Missed 2
+5:18,AWAY,Def Reb
+5:22,AWAY,+3
+5:38,HOME,Missed 3
+5:38,HOME,Off Reb
+5:47,HOME,TO (unforced)
+5:49,AWAY,+2
+6:01,HOME,+2 (Xia)
+6:15,AWAY,Missed 2
+6:15,HOME,Def Reb
+6:21,HOME,+2 (Will)
+6:43,AWAY,Missed 2
+6:43,AWAY,Off Reb
+6:43,HOME,Foul
+6:43,AWAY,FT Miss
+6:43,AWAY,FT Miss
+6:43,HOME,Def Reb
+7:12,HOME,Missed 3
+7:13,AWAY,Def Reb
+7:17,AWAY,Missed 3
+7:18,HOME,Def Reb
+7:22,HOME,TO (unforced)
+7:47,AWAY,Missed 2
+7:48,AWAY,Off Reb
+8:02,AWAY,Missed 2
+8:03,HOME,Def Reb
+8:05,HOME,+2 (Mavric)
+8:11,AWAY,+2
+8:21,HOME,Missed 3
+8:21,AWAY,Def Reb
+8:21,HOME,Sub In (Unknown)
+8:21,HOME,Sub In (26-)
+8:21,HOME,Sub Out (Collin)
+8:21,HOME,Sub Out (Will)
+8:24,AWAY,Missed 2
+8:24,HOME,Def Reb
+8:24,AWAY,Foul
+8:24,HOME,FT Made (Miles)
+8:24,HOME,FT Made (Miles)
+8:47,AWAY,Missed 2
+8:48,HOME,Def Reb
+8:53,HOME,Missed 2
+8:54,HOME,Off Reb
+9:03,HOME,Missed 2
+9:04,HOME,Off Reb
+9:08,HOME,Missed 3
+9:08,HOME,Off Reb
+9:23,HOME,Missed 3
+9:26,AWAY,Def Reb
+9:48,AWAY,+2
+9:58,HOME,TO (unforced)
+9:58,HOME,Sub In (Will)
+9:58,HOME,Sub Out (Xia)
+10:07,AWAY,+2
+10:23,HOME,Missed 2
+10:24,AWAY,Def Reb
+10:27,AWAY,+2
+10:32,HOME,TO (forced)
+10:50,AWAY,Missed 3
+10:51,HOME,Def Reb
+11:23,HOME,Missed 3
+11:24,HOME,Off Reb
+11:27,AWAY,Foul
+11:27,HOME,FT Miss
+11:27,HOME,Sub Out (26-)
+11:27,HOME,Sub Out (Mavric)
+11:27,HOME,Sub In (Cooper)
+11:27,HOME,Sub In (Collin)
+11:27,HOME,Sub In (Henry)
+11:27,HOME,Sub Out (Miles)
+11:30,HOME,FT Miss
+11:34,AWAY,Def Reb
+11:59,AWAY,+2
+12:11,HOME,Missed 2
+12:12,AWAY,Def Reb
+12:20,AWAY,Missed 2
+12:20,HOME,Def Reb
+12:25,HOME,+2 (Collin)
+12:45,AWAY,+3
+13:23,AWAY,Foul
+13:23,HOME,Sub In (Miles)
+13:23,HOME,Sub Out (Cooper)
+13:33,HOME,Missed 3
+13:35,AWAY,Def Reb
+13:58,AWAY,Missed 2
+13:58,HOME,Def Reb
+13:58,HOME,Missed 3
+13:58,AWAY,Def Reb
+13:58,AWAY,Period Q3
+13:58,HOME,Sub In (Josh)
+13:58,HOME,Sub Out (Miles)
+13:58,HOME,Sub Out (Henry)
+13:58,HOME,Sub Out (Collin)
+13:58,HOME,Sub Out (Will)
+13:58,HOME,Sub Out (Unknown)
+13:58,HOME,Sub In (Miles)
+13:58,HOME,Sub In (Will)
+13:58,HOME,Sub In (Henry)
+13:58,HOME,Sub In (Collin)
+14:18,AWAY,Missed 3
+14:19,HOME,Def Reb
+14:27,HOME,TO (unforced)
+14:48,AWAY,+2
+15:03,HOME,+3 (Josh)
+15:21,AWAY,+3
+15:38,HOME,+3 (Miles)
+15:53,HOME,Foul
+15:53,AWAY,FT Made
+15:53,AWAY,FT Miss
+15:53,HOME,Def Reb
+16:01,HOME,+3 (Josh)
+16:17,AWAY,+2
+16:38,HOME,Missed 3
+16:38,AWAY,Def Reb
+16:41,AWAY,+2
+17:02,HOME,TO (unforced)
+17:06,AWAY,TO (forced)
+17:15,HOME,+2 (Will)
+17:33,AWAY,+2
+17:46,AWAY,Foul
+17:46,HOME,FT Made
+17:46,HOME,FT Miss
+17:46,AWAY,Def Reb
+18:07,HOME,Foul
+18:13,AWAY,Missed 2
+18:14,HOME,Def Reb
+18:27,HOME,+2 (Will)
+18:52,AWAY,Missed 2
+18:52,HOME,Def Reb
+19:00,HOME,Missed 3
+19:06,HOME,Off Reb
+19:12,HOME,TO (unforced)
+19:15,AWAY,Missed 2
+19:16,HOME,Def Reb
+19:24,HOME,Missed 2
+19:26,AWAY,Def Reb
+19:46,AWAY,Off Foul
+19:46,HOME,Sub Out (Miles)
+19:46,HOME,Sub Out (Henry)
+19:46,HOME,Sub In (Xia)
+19:46,HOME,Sub In (Mavric)
+19:57,AWAY,Foul
+19:57,HOME,FT Made (Will)
+19:57,HOME,FT Miss (Will)
+19:57,AWAY,Def Reb
+20:16,AWAY,TO (forced)
+20:45,HOME,Off Foul
+20:55,HOME,Foul
+20:55,AWAY,FT Made
+20:55,AWAY,FT Made
+21:18,HOME,Missed 3
+21:19,AWAY,Def Reb
+21:34,AWAY,Missed 2
+21:34,HOME,Def Reb
+21:51,HOME,Missed 2
+21:51,AWAY,Def Reb
+21:56,AWAY,TO (unforced)
+22:02,HOME,Missed 2
+22:03,HOME,Off Reb
+22:10,HOME,+3 (Josh, 2nd chance)
+22:46,HOME,Sub Out (Collin)
+22:46,HOME,Sub In (Miles)
+22:46,HOME,Sub In (Henry)
+22:46,HOME,Sub Out (Josh)
+22:46,AWAY,TO (forced)
+22:50,HOME,+3 (Mavric)
+23:10,AWAY,+2
+23:23,HOME,+3 (Miles)
+23:49,AWAY,+3
+24:02,HOME,+3 (Miles)
+24:23,HOME,Foul
+24:34,AWAY,Missed 2
+24:35,HOME,Def Reb
+24:40,HOME,+3 (Miles)
+24:55,AWAY,+2
+25:03,HOME,+2 (Henry)
+25:24,HOME,Foul
+25:24,AWAY,FT Made
+25:24,AWAY,FT Miss
+25:24,HOME,Def Reb
+25:46,AWAY,Foul
+25:49,HOME,+2 (Will)
+26:16,AWAY,Missed 2
+26:16,HOME,Def Reb
+26:34,HOME,+2 (Mavric)
+26:55,AWAY,Missed 3
+26:55,HOME,Def Reb
+27:17,AWAY,Foul
+27:28,AWAY,Foul
+27:32,HOME,Missed 2
+27:33,AWAY,Def Reb
+27:43,HOME,Foul
+27:43,AWAY,FT Made
+27:43,AWAY,FT Miss
+27:43,HOME,Def Reb
+27:45,AWAY,Foul
+27:45,HOME,Sub Out (Henry)
+27:45,HOME,Sub Out (Miles)
+27:45,HOME,Sub In (JacobBlack)
+27:45,HOME,Sub In (Jack)
+27:45,HOME,Sub In (26-)
+27:45,AWAY,Foul
+27:45,HOME,FT Made (Jack)
+27:45,HOME,FT Miss (Jack)
+27:46,AWAY,Def Reb
+27:49,HOME,Sub Out (Xia)
+27:50,HOME,Sub Out (Will)
+27:55,HOME,Sub In (Cooper)
+28:00,AWAY,+2
+28:02,HOME,Sub Out (Mavric)
+28:02,HOME,Sub In (Miles)
+28:02,AWAY,Foul
+28:02,HOME,FT Made (Miles)
+28:02,HOME,FT Miss (Miles)
+28:02,AWAY,Def Reb
+28:12,AWAY,+3
+28:21,AWAY,Foul
+28:21,HOME,FT Miss (Jack)
+28:21,HOME,FT Made (Jack)</script>
+
+<div class="sheet">
+  <div class="head">
+    <div class="title">Game Report &nbsp;&middot;&nbsp; Full Game <span class="muted2">(2 halves &middot; 28:21)</span></div>
+    <div class="gameinfo">Saturday, September 19, 2026 &nbsp;·&nbsp; 2:25 PM &nbsp;·&nbsp; MAP Sports Facility</div>
+    <div class="score-row">
+      <div class="team home"><div class="name teal">Aliso</div><div class="sub">Home</div><div class="pts">58</div></div>
+      <div class="mid"><div class="vs">FINAL</div><div class="result">Won by 6</div></div>
+      <div class="team away"><div class="name gold">SM</div><div class="sub">Away</div><div class="pts">52</div></div>
+    </div>
+  </div>
+
+  <div class="pad" style="padding-top:16px;padding-bottom:4px">
+    <h2 class="sec" style="margin-top:0">Team Totals</h2>
+    <div class="grid">
+      <div class="card"><div class="lbl">Field Goal %</div><div class="vals" style="margin-top:12px"><span class="v t">44%</span><span class="v g">49%</span></div><div class="cap" style="margin-top:14px">Aliso 20-of-45 &nbsp;·&nbsp; SM 20-of-41</div></div>
+      <div class="card"><div class="lbl">Conversion <span style="text-transform:none;letter-spacing:0;color:var(--muted2);font-weight:600">(made / poss.)</span></div><div class="vals" style="margin-top:12px"><span class="v t">43%</span><span class="v g">43%</span></div><div class="cap" style="margin-top:14px">Aliso 20 of 46 poss &nbsp;·&nbsp; SM 20 of 47 poss</div></div>
+      <div class="card"><div class="lbl">Time of Possession</div><div class="vals"><span class="v t">52%</span><span class="v g">48%</span></div><div class="bar"><span style="width:52%"></span></div><div class="cap">Aliso 14:45 &nbsp;·&nbsp; SM 13:36 &nbsp;<span class="muted2">(of 28:21)</span></div></div>
+      <div class="card"><div class="lbl">Turnovers</div><div class="vals"><span class="v t">9</span><span class="v g">8</span></div><div class="cap" style="margin-top:11px">Unforced (errors) &nbsp; <b class="teal">8</b> &middot; <b class="gold">3</b></div><div class="cap" style="margin-top:3px">Forced by defense &nbsp; <b class="teal">1</b> &middot; <b class="gold">5</b></div></div>
+      <div class="card"><div class="lbl">Off. Reb / 2nd-Chance Pts</div><div class="vals"><span class="v t">8 <span style="font-size:12px;color:var(--muted)">/ 3</span></span><span class="v g">2 <span style="font-size:12px;color:var(--muted)">/ 0</span></span></div><div class="bar"><span style="width:80%"></span></div><div class="cap">2nd-chance pts = points scored after an offensive rebound</div></div>
+      <div class="card"><div class="lbl">Longest Scoring Run</div><div class="vals"><span class="v t">6&ndash;0</span><span class="v g">8&ndash;0</span></div><div class="bar"><span style="width:43%"></span></div><div class="cap">Best uninterrupted run by each team</div></div></div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:4px">
+    <h2 class="sec" style="margin-top:0">Shooting by Zone &mdash; Shot Chart</h2>
+    <div class="two">
+      <div class="courtcard">
+        <div class="courthd"><span class="teal">Aliso</span><span class="muted2">Field Goals 20 / 45 &nbsp;&middot;&nbsp; 44%</span></div>
+        <div class="courtsvg" id="court-HOME"></div>
+      </div>
+      <div class="courtcard">
+        <div class="courthd"><span class="gold">SM</span><span class="muted2">Field Goals 20 / 41 &nbsp;&middot;&nbsp; 49%</span></div>
+        <div class="courtsvg" id="court-AWAY"></div>
+      </div>
+    </div>
+    <div class="muted2" style="font-size:10px;margin-top:6px">Each zone shows makes and points; free throws and overall field goals include attempts and shooting&nbsp;%. (If per-team 3-point attempts are provided, 2PT/3PT show attempts and % too.)</div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:4px">
+    <h2 class="sec" style="margin-top:0">Momentum &mdash; Score Margin</h2>
+    <div class="panelbox">
+      <svg id="momentum" viewBox="0 0 760 190" width="100%"></svg>
+      <div class="legend" style="justify-content:space-between;margin-top:2px">
+        <span><span class="teal" style="font-weight:800">&#9650; Above the line = Aliso ahead</span></span>
+        <span><span class="gold" style="font-weight:800">&#9660; Below the line = Aliso trailing</span></span>
+        <span class="muted2" id="momnote"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Generated from live event log &nbsp;&middot;&nbsp; 208 tracked events</span><span>Hoop Rhythm Tracker &nbsp;&middot;&nbsp; Page 1 of 3</span></div>
+</div>
+
+<div class="sheet">
+  <div class="head" style="padding-bottom:16px">
+    <div class="title">Quarter Detail &amp; Possession Flow</div>
+    <div class="gameinfo">Aliso vs. SM &nbsp;·&nbsp; Saturday, September 19, 2026 &nbsp;·&nbsp; MAP Sports Facility</div>
+    <div class="flow-intro" style="margin-top:6px">Full quarter-by-quarter breakdown, then every possession in order.</div>
+  </div>
+
+  <div class="pad" style="padding-top:14px;padding-bottom:2px">
+    <div class="two">
+      <div class="panelbox">
+        <h2 class="sec" style="margin-top:0">Possession Time by Quarter</h2>
+        <div class="donuts" id="donuts"></div>
+        <div class="legend" style="justify-content:center;margin-top:8px"><span><i style="background:var(--teal)"></i>Aliso</span><span><i style="background:var(--gold)"></i>SM</span></div>
+      </div>
+      <div class="panelbox">
+        <h2 class="sec" style="margin-top:0">Conversion by Quarter <span class="muted2" style="font-weight:600;text-transform:none;letter-spacing:0">(scoring poss / total)</span></h2>
+        <div class="convrow" id="conv"></div>
+        <div class="legend" style="justify-content:center;margin-top:6px"><span><i style="background:var(--teal)"></i>Aliso</span><span><i style="background:var(--gold)"></i>SM</span></div>
+        <div class="cap" style="text-align:center;margin-top:8px">Conversion = possessions that ended in a score &divide; total possessions. 100% would mean every possession resulted in a score.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:6px">
+    <h2 class="sec" style="margin-top:0">Quarter by Quarter</h2>
+    <div class="panelbox" style="padding:4px 14px">
+      <table>
+        <thead><tr><th style="text-align:left">&nbsp;</th><th>H1</th><th>H2</th><th>Final</th></tr></thead>
+        <tbody>
+          <tr class="home"><td class="lab">Aliso points</td><td>19</td><td class="winq">39</td><td><b>58</b></td></tr>
+          <tr class="away"><td class="lab">SM points</td><td class="winq">24</td><td>28</td><td><b>52</b></td></tr>
+          <tr class="divide"><td class="lab">Field-goal pts (2s)</td><td class="muted2">10&ndash;16</td><td class="muted2">10&ndash;14</td><td class="muted2">20&ndash;30</td></tr>
+          <tr><td class="lab">Three-point pts</td><td class="muted2">6&ndash;6</td><td class="muted2">24&ndash;9</td><td class="muted2"><b class="teal">30</b>&ndash;15</td></tr>
+          <tr><td class="lab">Free-throw pts</td><td class="muted2">3&ndash;2</td><td class="muted2">5&ndash;5</td><td class="muted2">8&ndash;7</td></tr>
+          <tr class="divide"><td class="lab">Running score</td><td class="muted2">19&ndash;24</td><td class="muted2">58&ndash;52</td><td class="muted2">&mdash;</td></tr>
+          <tr><td class="lab">Poss. time (H&ndash;A)</td><td class="muted2">57&ndash;43</td><td class="muted2">46&ndash;54</td><td class="muted2">52&ndash;48</td></tr>
+          <tr><td class="lab">Aliso forced TOs</td><td class="muted2">2</td><td class="teal"><b>3</b></td><td class="muted2">5</td></tr>
+          <tr><td class="lab">Aliso off. rebounds</td><td class="teal"><b>6</b></td><td class="muted2">2</td><td class="muted2">8</td></tr></tbody>
+      </table>
+    </div>
+    <div class="muted2" style="font-size:10px;margin-top:5px">Point rows shown Aliso&ndash;SM. Shaded = quarter won.</div>
+  </div>
+
+  <div class="pad" style="padding-top:10px">
+    <h2 class="sec" style="margin-top:0">Possession Flow &mdash; By Quarter</h2>
+    <div class="flow-intro">
+      Every possession in order, left to right &mdash; <b class="teal">Aliso on top</b>, <b class="gold">SM on the bottom</b>. How each possession ended:
+    </div>
+    <div class="legend" style="margin-top:8px;gap:14px">
+      <span><span class="lgcell" style="background:var(--teal);color:var(--teal-ink)">2</span> Points scored (2 &middot; 3 &middot; and-1)</span>
+      <span><span class="lgcell" style="border:1.5px solid var(--teal);color:var(--teal)">X</span> Missed shot</span>
+      <span><span class="lgcell lgev">T</span> Turnover (forced/unforced)</span>
+      <span><span class="lgcell lgev">F</span> Offensive foul</span>
+      <span><span class="lgcell lgev">J</span> Jump-ball change</span>
+    </div>
+    <div id="flow" style="margin-top:10px"></div>
+  </div>
+
+  <div class="foot"><span>93 possessions &nbsp;&middot;&nbsp; Aliso 46 &nbsp;&middot;&nbsp; SM 47</span><span>Hoop Rhythm Tracker &nbsp;&middot;&nbsp; Page 2 of 3</span></div>
+</div>
+
+
+<div class="sheet">
+  <div class="head" style="padding:18px 26px">
+    <div class="title">Player Impact &mdash; Who Was On the Floor</div>
+    <div class="gameinfo">Aliso vs. SM &nbsp;&middot;&nbsp; Saturday, September 19, 2026 &nbsp;&middot;&nbsp; MAP Sports Facility</div>
+    <div class="gameinfo" style="margin-top:2px">Floor time from sub events; net = Aliso points minus SM points while that player was in.</div>
+  </div>
+
+  <div class="pad" style="padding-top:14px;padding-bottom:4px">
+    <h2 class="sec" style="margin-top:0">Floor Time &mdash; When Each Player Was In</h2>
+    <div class="panelbox"><svg viewBox="0 0 760 342" width="100%"><line x1="375.3" y1="14" x2="375.3" y2="336" stroke="var(--grid)" stroke-width="1" stroke-dasharray="3 4"/><text x="217.6" y="10" fill="var(--axis)" font-size="9" text-anchor="middle" font-weight="700">H1</text><text x="537.6" y="10" fill="var(--axis)" font-size="9" text-anchor="middle" font-weight="700">H2</text><text x="710" y="10" fill="var(--axis)" font-size="9" font-weight="700" text-anchor="start">TOTAL</text><text x="52" y="35" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Henry</text><text x="52" y="61" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Xia</text><text x="52" y="87" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Will</text><text x="52" y="113" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Miles</text><text x="52" y="139" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Josh</text><text x="52" y="165" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Mavric</text><text x="52" y="191" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Collin</text><text x="52" y="217" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">JacobBlack</text><text x="52" y="243" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Jack</text><text x="52" y="269" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">26-</text><text x="52" y="295" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Cooper</text><text x="52" y="321" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="end">Unknown</text><rect x="60.0" y="26" width="116.6" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="118.3" y="36.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">5:10</text><rect x="318.5" y="26" width="56.8" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="346.9" y="36.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">2:31</text><rect x="375.3" y="26" width="130.9" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="440.8" y="36.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">5:48</text><rect x="574.0" y="26" width="112.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="630.2" y="36.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">4:59</text><text x="710" y="36.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">18:28</text><rect x="176.6" y="52" width="108.4" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="230.8" y="62.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">4:48</text><rect x="506.2" y="52" width="181.7" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="597.1" y="62.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">8:03</text><text x="710" y="62.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">12:51</text><rect x="60.0" y="78" width="89.2" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="104.6" y="88.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">3:57</text><rect x="149.2" y="78" width="99.3" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="198.8" y="88.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">4:24</text><rect x="285.0" y="78" width="90.3" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="330.1" y="88.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">4:00</text><rect x="375.3" y="78" width="313.0" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="531.8" y="88.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">13:52</text><text x="710" y="88.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">26:13</text><rect x="60.0" y="104" width="258.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="189.2" y="114.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">11:27</text><rect x="362.1" y="104" width="13.2" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><rect x="375.3" y="104" width="130.9" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="440.8" y="114.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">5:48</text><rect x="574.0" y="104" width="112.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="630.2" y="114.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">4:59</text><rect x="692.9" y="104" width="7.1" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="710" y="114.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">23:08</text><rect x="60.0" y="130" width="67.0" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="93.5" y="140.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">2:58</text><rect x="127.7" y="130" width="48.9" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="152.2" y="140.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">2:10</text><rect x="375.3" y="130" width="198.7" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="474.6" y="140.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">8:48</text><text x="710" y="140.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">13:56</text><rect x="176.6" y="156" width="141.8" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="247.6" y="166.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">6:17</text><rect x="506.2" y="156" width="186.6" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="599.5" y="166.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">8:16</text><text x="710" y="166.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">14:33</text><rect x="60.0" y="182" width="188.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="154.3" y="192.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">8:21</text><rect x="318.5" y="182" width="56.8" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="346.9" y="192.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">2:31</text><rect x="375.3" y="182" width="198.7" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="474.6" y="192.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">8:48</text><text x="710" y="192.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">19:40</text><rect x="686.5" y="208" width="13.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="710" y="218.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">0:36</text><rect x="686.5" y="234" width="13.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="710" y="244.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">0:36</text><rect x="248.5" y="260" width="70.0" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="283.5" y="270.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">3:06</text><rect x="686.5" y="260" width="13.5" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="710" y="270.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">3:42</text><rect x="318.5" y="286" width="43.6" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="340.3" y="296.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">1:56</text><rect x="690.2" y="286" width="9.8" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="710" y="296.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">2:22</text><rect x="248.5" y="312" width="126.8" height="14" rx="4" fill="var(--teal)" opacity="0.75"/><text x="311.9" y="322.5" fill="var(--teal-ink)" font-size="9" font-weight="800" text-anchor="middle">5:37</text><text x="710" y="322.5" fill="var(--teal)" font-size="10.5" font-weight="800" text-anchor="start">5:37</text></svg></div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:6px">
+    <h2 class="sec" style="margin-top:0">Impact While On the Floor</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="border-bottom:none"></th><th style="border-bottom:none"></th>
+          <th style="border-bottom:none"></th>
+          <th colspan="2" style="border-bottom:none;padding:0"><div style="border-bottom:1.5px solid var(--axis);margin:0 10px;padding-bottom:4px;text-align:center">Possessions</div></th>
+          <th colspan="2" style="border-bottom:none;padding:0"><div style="border-bottom:1.5px solid var(--axis);margin:0 10px;padding-bottom:4px;text-align:center">Points</div></th>
+          <th style="border-bottom:none"></th><th style="border-bottom:none"></th>
+        </tr>
+        <tr><th style="text-align:left">Player</th><th>Minutes</th><th>Pts</th><th class="teal">Off</th><th class="gold">Def</th><th class="teal">Home</th><th class="gold">Away</th><th>Net (+/&ndash;)</th><th>Poss Win&nbsp;%</th></tr>
+      </thead>
+      <tbody><tr><td class="lab" style="text-align:left;font-weight:800">Henry</td><td>18:28</td><td><b>2</b></td><td>30</td><td>29</td><td><b class="teal">43</b></td><td><b class="gold">32</b></td><td><b class="teal">+11</b></td><td><b class="teal">56%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Xia</td><td>12:51</td><td><b>2</b></td><td>21</td><td>20</td><td><b class="teal">31</b></td><td><b class="gold">20</b></td><td><b class="teal">+11</b></td><td><b class="teal">59%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Will</td><td>26:13</td><td><b>9</b></td><td>44</td><td>42</td><td><b class="teal">54</b></td><td><b class="gold">45</b></td><td><b class="teal">+9</b></td><td><b class="teal">52%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Miles</td><td>23:08</td><td><b>15</b></td><td>40</td><td>39</td><td><b class="teal">51</b></td><td><b class="gold">43</b></td><td><b class="teal">+8</b></td><td><b class="teal">51%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Josh</td><td>13:56</td><td><b>9</b></td><td>23</td><td>23</td><td><b class="teal">27</b></td><td><b class="gold">20</b></td><td><b class="teal">+7</b></td><td><b class="teal">54%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Mavric</td><td>14:33</td><td><b>7</b></td><td>24</td><td>24</td><td><b class="teal">31</b></td><td><b class="gold">26</b></td><td><b class="teal">+5</b></td><td><b class="teal">52%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Collin</td><td>19:40</td><td><b>11</b></td><td>33</td><td>32</td><td><b class="teal">35</b></td><td><b class="gold">32</b></td><td><b class="teal">+3</b></td><td><b class="teal">51%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">JacobBlack</td><td>0:36</td><td><b>&mdash;</b></td><td>0</td><td>2</td><td><b class="teal">3</b></td><td><b class="gold">5</b></td><td><b class="gold">-2</b></td><td><b class="gold">0%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Jack</td><td>0:36</td><td><b>2</b></td><td>0</td><td>2</td><td><b class="teal">3</b></td><td><b class="gold">5</b></td><td><b class="gold">-2</b></td><td><b class="gold">0%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">26-</td><td>3:42</td><td><b>&mdash;</b></td><td>5</td><td>8</td><td><b class="teal">5</b></td><td><b class="gold">11</b></td><td><b class="gold">-6</b></td><td><b class="gold">23%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Cooper</td><td>2:22</td><td><b>&mdash;</b></td><td>2</td><td>5</td><td><b class="teal">4</b></td><td><b class="gold">10</b></td><td><b class="gold">-6</b></td><td><b class="gold">29%</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:800">Unknown</td><td>5:37</td><td><b>&mdash;</b></td><td>8</td><td>9</td><td><b class="teal">4</b></td><td><b class="gold">11</b></td><td><b class="gold">-7</b></td><td><b class="gold">29%</b></td></tr></tbody>
+    </table>
+    <div class="muted2" style="font-size:10px;margin-top:8px">All columns count only what happened while the player was on the floor. Pts = points scored by that player (57 of 58 tagged; 1 team points logged without a scorer). Poss Win&nbsp;% = (Aliso scoring possessions + defensive stops) &divide; total possessions &mdash; the share of possessions that went Aliso&#39;s way, normalized for playing time; 50% is break-even. Net counts all team scoring while on the floor &mdash; it measures lineups, not individual scoring. One game is a small sample. Scoreboard corrections excluded.</div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:6px">
+    <h2 class="sec" style="margin-top:0">Net Score Margin While On the Floor &mdash; By Player</h2>
+    <div class="muted2" style="font-size:10px;margin-bottom:2px">Shaded bands = on the floor. The line moves only while the player is in; flat stretches are bench time.</div>
+    
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Henry</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">43</span><span class="muted2">&ndash;</span><span class="gold">32</span>&nbsp;&nbsp;<span class="teal">net +11</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc23968a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc23968b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="44.0" y="8" width="128.7" height="74" fill="var(--shade)"/><rect x="329.1" y="8" width="62.7" height="74" fill="var(--shade)"/><rect x="391.8" y="8" width="144.4" height="74" fill="var(--shade)"/><rect x="611.0" y="8" width="124.1" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+12</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-12</text>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 51.2 L 90.1 51.2 L 90.1 41.9 L 96.3 41.9 L 96.3 48.1 L 101.7 48.1 L 101.7 38.8 L 101.7 38.8 L 101.7 35.8 L 131.6 35.8 L 131.6 38.8 L 131.6 38.8 L 131.6 41.9 L 166.4 41.9 L 166.4 35.8 L 342.4 35.8 L 342.4 41.9 L 353.2 41.9 L 353.2 35.8 L 361.5 35.8 L 361.5 45.0 L 412.6 45.0 L 412.6 51.2 L 418.8 51.2 L 418.8 41.9 L 426.3 41.9 L 426.3 51.2 L 433.3 51.2 L 433.3 41.9 L 439.5 41.9 L 439.5 45.0 L 442.9 45.0 L 442.9 35.8 L 449.5 35.8 L 449.5 41.9 L 459.5 41.9 L 459.5 48.1 L 473.6 48.1 L 473.6 41.9 L 481.0 41.9 L 481.0 48.1 L 486.4 48.1 L 486.4 45.0 L 503.5 45.0 L 503.5 38.8 L 612.6 38.8 L 612.6 29.6 L 620.9 29.6 L 620.9 35.8 L 626.3 35.8 L 626.3 26.5 L 637.1 26.5 L 637.1 35.8 L 642.5 35.8 L 642.5 26.5 L 658.3 26.5 L 658.3 17.2 L 664.5 17.2 L 664.5 23.4 L 667.8 23.4 L 667.8 17.2 L 676.5 17.2 L 676.5 20.3 L 686.9 20.3 L 686.9 14.2 L 705.6 14.2 L 705.6 8.0 L 734.2 8.0 L 734.2 11.1 L 750.0 11.1 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc23968a)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 51.2 L 90.1 51.2 L 90.1 41.9 L 96.3 41.9 L 96.3 48.1 L 101.7 48.1 L 101.7 38.8 L 101.7 38.8 L 101.7 35.8 L 131.6 35.8 L 131.6 38.8 L 131.6 38.8 L 131.6 41.9 L 166.4 41.9 L 166.4 35.8 L 342.4 35.8 L 342.4 41.9 L 353.2 41.9 L 353.2 35.8 L 361.5 35.8 L 361.5 45.0 L 412.6 45.0 L 412.6 51.2 L 418.8 51.2 L 418.8 41.9 L 426.3 41.9 L 426.3 51.2 L 433.3 51.2 L 433.3 41.9 L 439.5 41.9 L 439.5 45.0 L 442.9 45.0 L 442.9 35.8 L 449.5 35.8 L 449.5 41.9 L 459.5 41.9 L 459.5 48.1 L 473.6 48.1 L 473.6 41.9 L 481.0 41.9 L 481.0 48.1 L 486.4 48.1 L 486.4 45.0 L 503.5 45.0 L 503.5 38.8 L 612.6 38.8 L 612.6 29.6 L 620.9 29.6 L 620.9 35.8 L 626.3 35.8 L 626.3 26.5 L 637.1 26.5 L 637.1 35.8 L 642.5 35.8 L 642.5 26.5 L 658.3 26.5 L 658.3 17.2 L 664.5 17.2 L 664.5 23.4 L 667.8 23.4 L 667.8 17.2 L 676.5 17.2 L 676.5 20.3 L 686.9 20.3 L 686.9 14.2 L 705.6 14.2 L 705.6 8.0 L 734.2 8.0 L 734.2 11.1 L 750.0 11.1 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc23968b)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 51.2 L 90.1 51.2 L 90.1 41.9 L 96.3 41.9 L 96.3 48.1 L 101.7 48.1 L 101.7 38.8 L 101.7 38.8 L 101.7 35.8 L 131.6 35.8 L 131.6 38.8 L 131.6 38.8 L 131.6 41.9 L 166.4 41.9 L 166.4 35.8 L 342.4 35.8 L 342.4 41.9 L 353.2 41.9 L 353.2 35.8 L 361.5 35.8 L 361.5 45.0 L 412.6 45.0 L 412.6 51.2 L 418.8 51.2 L 418.8 41.9 L 426.3 41.9 L 426.3 51.2 L 433.3 51.2 L 433.3 41.9 L 439.5 41.9 L 439.5 45.0 L 442.9 45.0 L 442.9 35.8 L 449.5 35.8 L 449.5 41.9 L 459.5 41.9 L 459.5 48.1 L 473.6 48.1 L 473.6 41.9 L 481.0 41.9 L 481.0 48.1 L 486.4 48.1 L 486.4 45.0 L 503.5 45.0 L 503.5 38.8 L 612.6 38.8 L 612.6 29.6 L 620.9 29.6 L 620.9 35.8 L 626.3 35.8 L 626.3 26.5 L 637.1 26.5 L 637.1 35.8 L 642.5 35.8 L 642.5 26.5 L 658.3 26.5 L 658.3 17.2 L 664.5 17.2 L 664.5 23.4 L 667.8 23.4 L 667.8 17.2 L 676.5 17.2 L 676.5 20.3 L 686.9 20.3 L 686.9 14.2 L 705.6 14.2 L 705.6 8.0 L 734.2 8.0 L 734.2 11.1 L 750.0 11.1" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="169.7" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+3</text><text x="388.8" y="17" fill="var(--muted2)" font-size="9.5" font-weight="800" text-anchor="end">0</text><text x="533.2" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+2</text><text x="732.1" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+11</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Xia</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">31</span><span class="muted2">&ndash;</span><span class="gold">20</span>&nbsp;&nbsp;<span class="teal">net +11</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc25834a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc25834b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="172.7" y="8" width="119.5" height="74" fill="var(--shade)"/><rect x="536.2" y="8" width="200.5" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+11</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-11</text>
+          <path d="M 44.0 45.0 L 177.6 45.0 L 177.6 55.1 L 188.9 55.1 L 188.9 61.8 L 193.8 61.8 L 193.8 55.1 L 202.1 55.1 L 202.1 48.4 L 245.3 48.4 L 245.3 41.6 L 247.8 41.6 L 247.8 48.4 L 253.2 48.4 L 253.2 45.0 L 253.2 45.0 L 253.2 41.6 L 288.0 41.6 L 288.0 48.4 L 540.8 48.4 L 540.8 45.0 L 564.9 45.0 L 564.9 48.4 L 564.9 48.4 L 564.9 51.7 L 596.0 51.7 L 596.0 41.6 L 612.6 41.6 L 612.6 31.5 L 620.9 31.5 L 620.9 38.3 L 626.3 38.3 L 626.3 28.2 L 637.1 28.2 L 637.1 38.3 L 642.5 38.3 L 642.5 28.2 L 658.3 28.2 L 658.3 18.1 L 664.5 18.1 L 664.5 24.8 L 667.8 24.8 L 667.8 18.1 L 676.5 18.1 L 676.5 21.5 L 686.9 21.5 L 686.9 14.7 L 705.6 14.7 L 705.6 8.0 L 734.2 8.0 L 734.2 11.4 L 735.1 11.4 L 735.1 8.0 L 750.0 8.0 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc25834a)"/>
+          <path d="M 44.0 45.0 L 177.6 45.0 L 177.6 55.1 L 188.9 55.1 L 188.9 61.8 L 193.8 61.8 L 193.8 55.1 L 202.1 55.1 L 202.1 48.4 L 245.3 48.4 L 245.3 41.6 L 247.8 41.6 L 247.8 48.4 L 253.2 48.4 L 253.2 45.0 L 253.2 45.0 L 253.2 41.6 L 288.0 41.6 L 288.0 48.4 L 540.8 48.4 L 540.8 45.0 L 564.9 45.0 L 564.9 48.4 L 564.9 48.4 L 564.9 51.7 L 596.0 51.7 L 596.0 41.6 L 612.6 41.6 L 612.6 31.5 L 620.9 31.5 L 620.9 38.3 L 626.3 38.3 L 626.3 28.2 L 637.1 28.2 L 637.1 38.3 L 642.5 38.3 L 642.5 28.2 L 658.3 28.2 L 658.3 18.1 L 664.5 18.1 L 664.5 24.8 L 667.8 24.8 L 667.8 18.1 L 676.5 18.1 L 676.5 21.5 L 686.9 21.5 L 686.9 14.7 L 705.6 14.7 L 705.6 8.0 L 734.2 8.0 L 734.2 11.4 L 735.1 11.4 L 735.1 8.0 L 750.0 8.0 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc25834b)"/>
+          <path d="M 44.0 45.0 L 177.6 45.0 L 177.6 55.1 L 188.9 55.1 L 188.9 61.8 L 193.8 61.8 L 193.8 55.1 L 202.1 55.1 L 202.1 48.4 L 245.3 48.4 L 245.3 41.6 L 247.8 41.6 L 247.8 48.4 L 253.2 48.4 L 253.2 45.0 L 253.2 45.0 L 253.2 41.6 L 288.0 41.6 L 288.0 48.4 L 540.8 48.4 L 540.8 45.0 L 564.9 45.0 L 564.9 48.4 L 564.9 48.4 L 564.9 51.7 L 596.0 51.7 L 596.0 41.6 L 612.6 41.6 L 612.6 31.5 L 620.9 31.5 L 620.9 38.3 L 626.3 38.3 L 626.3 28.2 L 637.1 28.2 L 637.1 38.3 L 642.5 38.3 L 642.5 28.2 L 658.3 28.2 L 658.3 18.1 L 664.5 18.1 L 664.5 24.8 L 667.8 24.8 L 667.8 18.1 L 676.5 18.1 L 676.5 21.5 L 686.9 21.5 L 686.9 14.7 L 705.6 14.7 L 705.6 8.0 L 734.2 8.0 L 734.2 11.4 L 735.1 11.4 L 735.1 8.0 L 750.0 8.0" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="289.2" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-1</text><text x="733.7" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+11</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Will</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">54</span><span class="muted2">&ndash;</span><span class="gold">45</span>&nbsp;&nbsp;<span class="teal">net +9</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc35702a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc35702b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="44.0" y="8" width="98.4" height="74" fill="var(--shade)"/><rect x="142.4" y="8" width="109.6" height="74" fill="var(--shade)"/><rect x="292.2" y="8" width="99.6" height="74" fill="var(--shade)"/><rect x="391.8" y="8" width="345.3" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+9</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-9</text>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 53.2 L 90.1 53.2 L 90.1 40.9 L 96.3 40.9 L 96.3 49.1 L 101.7 49.1 L 101.7 36.8 L 101.7 36.8 L 101.7 32.7 L 131.6 32.7 L 131.6 36.8 L 131.6 36.8 L 131.6 40.9 L 166.4 40.9 L 166.4 32.7 L 177.6 32.7 L 177.6 45.0 L 188.9 45.0 L 188.9 53.2 L 193.8 53.2 L 193.8 45.0 L 202.1 45.0 L 202.1 36.8 L 245.3 36.8 L 245.3 28.6 L 247.8 28.6 L 247.8 36.8 L 295.9 36.8 L 295.9 45.0 L 304.2 45.0 L 304.2 53.2 L 342.4 53.2 L 342.4 61.4 L 353.2 61.4 L 353.2 53.2 L 361.5 53.2 L 361.5 65.6 L 412.6 65.6 L 412.6 73.8 L 418.8 73.8 L 418.8 61.4 L 426.3 61.4 L 426.3 73.8 L 433.3 73.8 L 433.3 61.4 L 439.5 61.4 L 439.5 65.6 L 442.9 65.6 L 442.9 53.2 L 449.5 53.2 L 449.5 61.4 L 459.5 61.4 L 459.5 69.7 L 473.6 69.7 L 473.6 61.4 L 481.0 61.4 L 481.0 69.7 L 486.4 69.7 L 486.4 65.6 L 503.5 65.6 L 503.5 57.3 L 540.8 57.3 L 540.8 53.2 L 564.9 53.2 L 564.9 57.3 L 564.9 57.3 L 564.9 61.4 L 596.0 61.4 L 596.0 49.1 L 612.6 49.1 L 612.6 36.8 L 620.9 36.8 L 620.9 45.0 L 626.3 45.0 L 626.3 32.7 L 637.1 32.7 L 637.1 45.0 L 642.5 45.0 L 642.5 32.7 L 658.3 32.7 L 658.3 20.3 L 664.5 20.3 L 664.5 28.6 L 667.8 28.6 L 667.8 20.3 L 676.5 20.3 L 676.5 24.4 L 686.9 24.4 L 686.9 16.2 L 705.6 16.2 L 705.6 8.0 L 734.2 8.0 L 734.2 12.1 L 735.1 12.1 L 735.1 8.0 L 750.0 8.0 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc35702a)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 53.2 L 90.1 53.2 L 90.1 40.9 L 96.3 40.9 L 96.3 49.1 L 101.7 49.1 L 101.7 36.8 L 101.7 36.8 L 101.7 32.7 L 131.6 32.7 L 131.6 36.8 L 131.6 36.8 L 131.6 40.9 L 166.4 40.9 L 166.4 32.7 L 177.6 32.7 L 177.6 45.0 L 188.9 45.0 L 188.9 53.2 L 193.8 53.2 L 193.8 45.0 L 202.1 45.0 L 202.1 36.8 L 245.3 36.8 L 245.3 28.6 L 247.8 28.6 L 247.8 36.8 L 295.9 36.8 L 295.9 45.0 L 304.2 45.0 L 304.2 53.2 L 342.4 53.2 L 342.4 61.4 L 353.2 61.4 L 353.2 53.2 L 361.5 53.2 L 361.5 65.6 L 412.6 65.6 L 412.6 73.8 L 418.8 73.8 L 418.8 61.4 L 426.3 61.4 L 426.3 73.8 L 433.3 73.8 L 433.3 61.4 L 439.5 61.4 L 439.5 65.6 L 442.9 65.6 L 442.9 53.2 L 449.5 53.2 L 449.5 61.4 L 459.5 61.4 L 459.5 69.7 L 473.6 69.7 L 473.6 61.4 L 481.0 61.4 L 481.0 69.7 L 486.4 69.7 L 486.4 65.6 L 503.5 65.6 L 503.5 57.3 L 540.8 57.3 L 540.8 53.2 L 564.9 53.2 L 564.9 57.3 L 564.9 57.3 L 564.9 61.4 L 596.0 61.4 L 596.0 49.1 L 612.6 49.1 L 612.6 36.8 L 620.9 36.8 L 620.9 45.0 L 626.3 45.0 L 626.3 32.7 L 637.1 32.7 L 637.1 45.0 L 642.5 45.0 L 642.5 32.7 L 658.3 32.7 L 658.3 20.3 L 664.5 20.3 L 664.5 28.6 L 667.8 28.6 L 667.8 20.3 L 676.5 20.3 L 676.5 24.4 L 686.9 24.4 L 686.9 16.2 L 705.6 16.2 L 705.6 8.0 L 734.2 8.0 L 734.2 12.1 L 735.1 12.1 L 735.1 8.0 L 750.0 8.0 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc35702b)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 53.2 L 90.1 53.2 L 90.1 40.9 L 96.3 40.9 L 96.3 49.1 L 101.7 49.1 L 101.7 36.8 L 101.7 36.8 L 101.7 32.7 L 131.6 32.7 L 131.6 36.8 L 131.6 36.8 L 131.6 40.9 L 166.4 40.9 L 166.4 32.7 L 177.6 32.7 L 177.6 45.0 L 188.9 45.0 L 188.9 53.2 L 193.8 53.2 L 193.8 45.0 L 202.1 45.0 L 202.1 36.8 L 245.3 36.8 L 245.3 28.6 L 247.8 28.6 L 247.8 36.8 L 295.9 36.8 L 295.9 45.0 L 304.2 45.0 L 304.2 53.2 L 342.4 53.2 L 342.4 61.4 L 353.2 61.4 L 353.2 53.2 L 361.5 53.2 L 361.5 65.6 L 412.6 65.6 L 412.6 73.8 L 418.8 73.8 L 418.8 61.4 L 426.3 61.4 L 426.3 73.8 L 433.3 73.8 L 433.3 61.4 L 439.5 61.4 L 439.5 65.6 L 442.9 65.6 L 442.9 53.2 L 449.5 53.2 L 449.5 61.4 L 459.5 61.4 L 459.5 69.7 L 473.6 69.7 L 473.6 61.4 L 481.0 61.4 L 481.0 69.7 L 486.4 69.7 L 486.4 65.6 L 503.5 65.6 L 503.5 57.3 L 540.8 57.3 L 540.8 53.2 L 564.9 53.2 L 564.9 57.3 L 564.9 57.3 L 564.9 61.4 L 596.0 61.4 L 596.0 49.1 L 612.6 49.1 L 612.6 36.8 L 620.9 36.8 L 620.9 45.0 L 626.3 45.0 L 626.3 32.7 L 637.1 32.7 L 637.1 45.0 L 642.5 45.0 L 642.5 32.7 L 658.3 32.7 L 658.3 20.3 L 664.5 20.3 L 664.5 28.6 L 667.8 28.6 L 667.8 20.3 L 676.5 20.3 L 676.5 24.4 L 686.9 24.4 L 686.9 16.2 L 705.6 16.2 L 705.6 8.0 L 734.2 8.0 L 734.2 12.1 L 735.1 12.1 L 735.1 8.0 L 750.0 8.0" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="139.4" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+1</text><text x="248.9" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+2</text><text x="388.8" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-5</text><text x="734.1" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+9</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Miles</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">51</span><span class="muted2">&ndash;</span><span class="gold">43</span>&nbsp;&nbsp;<span class="teal">net +8</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc59377a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc59377b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="44.0" y="8" width="285.1" height="74" fill="var(--shade)"/><rect x="377.3" y="8" width="14.5" height="74" fill="var(--shade)"/><rect x="391.8" y="8" width="144.4" height="74" fill="var(--shade)"/><rect x="611.0" y="8" width="124.1" height="74" fill="var(--shade)"/><rect x="742.1" y="8" width="7.9" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+10</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-10</text>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 52.4 L 90.1 52.4 L 90.1 41.3 L 96.3 41.3 L 96.3 48.7 L 101.7 48.7 L 101.7 37.6 L 101.7 37.6 L 101.7 33.9 L 131.6 33.9 L 131.6 37.6 L 131.6 37.6 L 131.6 41.3 L 166.4 41.3 L 166.4 33.9 L 177.6 33.9 L 177.6 45.0 L 188.9 45.0 L 188.9 52.4 L 193.8 52.4 L 193.8 45.0 L 202.1 45.0 L 202.1 37.6 L 245.3 37.6 L 245.3 30.2 L 247.8 30.2 L 247.8 37.6 L 253.2 37.6 L 253.2 33.9 L 253.2 33.9 L 253.2 30.2 L 288.0 30.2 L 288.0 37.6 L 295.9 37.6 L 295.9 45.0 L 304.2 45.0 L 304.2 52.4 L 412.6 52.4 L 412.6 59.8 L 418.8 59.8 L 418.8 48.7 L 426.3 48.7 L 426.3 59.8 L 433.3 59.8 L 433.3 48.7 L 439.5 48.7 L 439.5 52.4 L 442.9 52.4 L 442.9 41.3 L 449.5 41.3 L 449.5 48.7 L 459.5 48.7 L 459.5 56.1 L 473.6 56.1 L 473.6 48.7 L 481.0 48.7 L 481.0 56.1 L 486.4 56.1 L 486.4 52.4 L 503.5 52.4 L 503.5 45.0 L 612.6 45.0 L 612.6 33.9 L 620.9 33.9 L 620.9 41.3 L 626.3 41.3 L 626.3 30.2 L 637.1 30.2 L 637.1 41.3 L 642.5 41.3 L 642.5 30.2 L 658.3 30.2 L 658.3 19.1 L 664.5 19.1 L 664.5 26.5 L 667.8 26.5 L 667.8 19.1 L 676.5 19.1 L 676.5 22.8 L 686.9 22.8 L 686.9 15.4 L 705.6 15.4 L 705.6 8.0 L 734.2 8.0 L 734.2 11.7 L 742.1 11.7 L 742.1 8.0 L 746.3 8.0 L 746.3 19.1 L 750.0 19.1 L 750.0 15.4 L 750.0 15.4 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc59377a)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 52.4 L 90.1 52.4 L 90.1 41.3 L 96.3 41.3 L 96.3 48.7 L 101.7 48.7 L 101.7 37.6 L 101.7 37.6 L 101.7 33.9 L 131.6 33.9 L 131.6 37.6 L 131.6 37.6 L 131.6 41.3 L 166.4 41.3 L 166.4 33.9 L 177.6 33.9 L 177.6 45.0 L 188.9 45.0 L 188.9 52.4 L 193.8 52.4 L 193.8 45.0 L 202.1 45.0 L 202.1 37.6 L 245.3 37.6 L 245.3 30.2 L 247.8 30.2 L 247.8 37.6 L 253.2 37.6 L 253.2 33.9 L 253.2 33.9 L 253.2 30.2 L 288.0 30.2 L 288.0 37.6 L 295.9 37.6 L 295.9 45.0 L 304.2 45.0 L 304.2 52.4 L 412.6 52.4 L 412.6 59.8 L 418.8 59.8 L 418.8 48.7 L 426.3 48.7 L 426.3 59.8 L 433.3 59.8 L 433.3 48.7 L 439.5 48.7 L 439.5 52.4 L 442.9 52.4 L 442.9 41.3 L 449.5 41.3 L 449.5 48.7 L 459.5 48.7 L 459.5 56.1 L 473.6 56.1 L 473.6 48.7 L 481.0 48.7 L 481.0 56.1 L 486.4 56.1 L 486.4 52.4 L 503.5 52.4 L 503.5 45.0 L 612.6 45.0 L 612.6 33.9 L 620.9 33.9 L 620.9 41.3 L 626.3 41.3 L 626.3 30.2 L 637.1 30.2 L 637.1 41.3 L 642.5 41.3 L 642.5 30.2 L 658.3 30.2 L 658.3 19.1 L 664.5 19.1 L 664.5 26.5 L 667.8 26.5 L 667.8 19.1 L 676.5 19.1 L 676.5 22.8 L 686.9 22.8 L 686.9 15.4 L 705.6 15.4 L 705.6 8.0 L 734.2 8.0 L 734.2 11.7 L 742.1 11.7 L 742.1 8.0 L 746.3 8.0 L 746.3 19.1 L 750.0 19.1 L 750.0 15.4 L 750.0 15.4 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc59377b)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 52.4 L 90.1 52.4 L 90.1 41.3 L 96.3 41.3 L 96.3 48.7 L 101.7 48.7 L 101.7 37.6 L 101.7 37.6 L 101.7 33.9 L 131.6 33.9 L 131.6 37.6 L 131.6 37.6 L 131.6 41.3 L 166.4 41.3 L 166.4 33.9 L 177.6 33.9 L 177.6 45.0 L 188.9 45.0 L 188.9 52.4 L 193.8 52.4 L 193.8 45.0 L 202.1 45.0 L 202.1 37.6 L 245.3 37.6 L 245.3 30.2 L 247.8 30.2 L 247.8 37.6 L 253.2 37.6 L 253.2 33.9 L 253.2 33.9 L 253.2 30.2 L 288.0 30.2 L 288.0 37.6 L 295.9 37.6 L 295.9 45.0 L 304.2 45.0 L 304.2 52.4 L 412.6 52.4 L 412.6 59.8 L 418.8 59.8 L 418.8 48.7 L 426.3 48.7 L 426.3 59.8 L 433.3 59.8 L 433.3 48.7 L 439.5 48.7 L 439.5 52.4 L 442.9 52.4 L 442.9 41.3 L 449.5 41.3 L 449.5 48.7 L 459.5 48.7 L 459.5 56.1 L 473.6 56.1 L 473.6 48.7 L 481.0 48.7 L 481.0 56.1 L 486.4 56.1 L 486.4 52.4 L 503.5 52.4 L 503.5 45.0 L 612.6 45.0 L 612.6 33.9 L 620.9 33.9 L 620.9 41.3 L 626.3 41.3 L 626.3 30.2 L 637.1 30.2 L 637.1 41.3 L 642.5 41.3 L 642.5 30.2 L 658.3 30.2 L 658.3 19.1 L 664.5 19.1 L 664.5 26.5 L 667.8 26.5 L 667.8 19.1 L 676.5 19.1 L 676.5 22.8 L 686.9 22.8 L 686.9 15.4 L 705.6 15.4 L 705.6 8.0 L 734.2 8.0 L 734.2 11.7 L 742.1 11.7 L 742.1 8.0 L 746.3 8.0 L 746.3 19.1 L 750.0 19.1 L 750.0 15.4 L 750.0 15.4" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="326.1" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-2</text><text x="388.8" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-2</text><text x="533.2" y="17" fill="var(--muted2)" font-size="9.5" font-weight="800" text-anchor="end">0</text><text x="732.1" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+9</text><text x="747.0" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+8</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Josh</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">27</span><span class="muted2">&ndash;</span><span class="gold">20</span>&nbsp;&nbsp;<span class="teal">net +7</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc31371a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc31371b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="44.0" y="8" width="73.9" height="74" fill="var(--shade)"/><rect x="118.7" y="8" width="54.0" height="74" fill="var(--shade)"/><rect x="391.8" y="8" width="219.1" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+7</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-7</text>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 55.6 L 90.1 55.6 L 90.1 39.7 L 96.3 39.7 L 96.3 50.3 L 101.7 50.3 L 101.7 34.4 L 101.7 34.4 L 101.7 29.1 L 131.6 29.1 L 131.6 34.4 L 131.6 34.4 L 131.6 39.7 L 166.4 39.7 L 166.4 29.1 L 412.6 29.1 L 412.6 39.7 L 418.8 39.7 L 418.8 23.9 L 426.3 23.9 L 426.3 39.7 L 433.3 39.7 L 433.3 23.9 L 439.5 23.9 L 439.5 29.1 L 442.9 29.1 L 442.9 13.3 L 449.5 13.3 L 449.5 23.9 L 459.5 23.9 L 459.5 34.4 L 473.6 34.4 L 473.6 23.9 L 481.0 23.9 L 481.0 34.4 L 486.4 34.4 L 486.4 29.1 L 503.5 29.1 L 503.5 18.6 L 540.8 18.6 L 540.8 13.3 L 564.9 13.3 L 564.9 18.6 L 564.9 18.6 L 564.9 23.9 L 596.0 23.9 L 596.0 8.0 L 750.0 8.0 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc31371a)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 55.6 L 90.1 55.6 L 90.1 39.7 L 96.3 39.7 L 96.3 50.3 L 101.7 50.3 L 101.7 34.4 L 101.7 34.4 L 101.7 29.1 L 131.6 29.1 L 131.6 34.4 L 131.6 34.4 L 131.6 39.7 L 166.4 39.7 L 166.4 29.1 L 412.6 29.1 L 412.6 39.7 L 418.8 39.7 L 418.8 23.9 L 426.3 23.9 L 426.3 39.7 L 433.3 39.7 L 433.3 23.9 L 439.5 23.9 L 439.5 29.1 L 442.9 29.1 L 442.9 13.3 L 449.5 13.3 L 449.5 23.9 L 459.5 23.9 L 459.5 34.4 L 473.6 34.4 L 473.6 23.9 L 481.0 23.9 L 481.0 34.4 L 486.4 34.4 L 486.4 29.1 L 503.5 29.1 L 503.5 18.6 L 540.8 18.6 L 540.8 13.3 L 564.9 13.3 L 564.9 18.6 L 564.9 18.6 L 564.9 23.9 L 596.0 23.9 L 596.0 8.0 L 750.0 8.0 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc31371b)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 55.6 L 90.1 55.6 L 90.1 39.7 L 96.3 39.7 L 96.3 50.3 L 101.7 50.3 L 101.7 34.4 L 101.7 34.4 L 101.7 29.1 L 131.6 29.1 L 131.6 34.4 L 131.6 34.4 L 131.6 39.7 L 166.4 39.7 L 166.4 29.1 L 412.6 29.1 L 412.6 39.7 L 418.8 39.7 L 418.8 23.9 L 426.3 23.9 L 426.3 39.7 L 433.3 39.7 L 433.3 23.9 L 439.5 23.9 L 439.5 29.1 L 442.9 29.1 L 442.9 13.3 L 449.5 13.3 L 449.5 23.9 L 459.5 23.9 L 459.5 34.4 L 473.6 34.4 L 473.6 23.9 L 481.0 23.9 L 481.0 34.4 L 486.4 34.4 L 486.4 29.1 L 503.5 29.1 L 503.5 18.6 L 540.8 18.6 L 540.8 13.3 L 564.9 13.3 L 564.9 18.6 L 564.9 18.6 L 564.9 23.9 L 596.0 23.9 L 596.0 8.0 L 750.0 8.0" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="114.9" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+3</text><text x="169.7" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+3</text><text x="608.0" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+7</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Mavric</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">31</span><span class="muted2">&ndash;</span><span class="gold">26</span>&nbsp;&nbsp;<span class="teal">net +5</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc16539a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc16539b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="172.7" y="8" width="156.5" height="74" fill="var(--shade)"/><rect x="536.2" y="8" width="205.9" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+7</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-7</text>
+          <path d="M 44.0 45.0 L 177.6 45.0 L 177.6 60.9 L 188.9 60.9 L 188.9 71.4 L 193.8 71.4 L 193.8 60.9 L 202.1 60.9 L 202.1 50.3 L 245.3 50.3 L 245.3 39.7 L 247.8 39.7 L 247.8 50.3 L 253.2 50.3 L 253.2 45.0 L 253.2 45.0 L 253.2 39.7 L 288.0 39.7 L 288.0 50.3 L 295.9 50.3 L 295.9 60.9 L 304.2 60.9 L 304.2 71.4 L 540.8 71.4 L 540.8 66.1 L 564.9 66.1 L 564.9 71.4 L 564.9 71.4 L 564.9 76.7 L 596.0 76.7 L 596.0 60.9 L 612.6 60.9 L 612.6 45.0 L 620.9 45.0 L 620.9 55.6 L 626.3 55.6 L 626.3 39.7 L 637.1 39.7 L 637.1 55.6 L 642.5 55.6 L 642.5 39.7 L 658.3 39.7 L 658.3 23.9 L 664.5 23.9 L 664.5 34.4 L 667.8 34.4 L 667.8 23.9 L 676.5 23.9 L 676.5 29.1 L 686.9 29.1 L 686.9 18.6 L 705.6 18.6 L 705.6 8.0 L 734.2 8.0 L 734.2 13.3 L 735.1 13.3 L 735.1 8.0 L 741.3 8.0 L 741.3 18.6 L 750.0 18.6 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc16539a)"/>
+          <path d="M 44.0 45.0 L 177.6 45.0 L 177.6 60.9 L 188.9 60.9 L 188.9 71.4 L 193.8 71.4 L 193.8 60.9 L 202.1 60.9 L 202.1 50.3 L 245.3 50.3 L 245.3 39.7 L 247.8 39.7 L 247.8 50.3 L 253.2 50.3 L 253.2 45.0 L 253.2 45.0 L 253.2 39.7 L 288.0 39.7 L 288.0 50.3 L 295.9 50.3 L 295.9 60.9 L 304.2 60.9 L 304.2 71.4 L 540.8 71.4 L 540.8 66.1 L 564.9 66.1 L 564.9 71.4 L 564.9 71.4 L 564.9 76.7 L 596.0 76.7 L 596.0 60.9 L 612.6 60.9 L 612.6 45.0 L 620.9 45.0 L 620.9 55.6 L 626.3 55.6 L 626.3 39.7 L 637.1 39.7 L 637.1 55.6 L 642.5 55.6 L 642.5 39.7 L 658.3 39.7 L 658.3 23.9 L 664.5 23.9 L 664.5 34.4 L 667.8 34.4 L 667.8 23.9 L 676.5 23.9 L 676.5 29.1 L 686.9 29.1 L 686.9 18.6 L 705.6 18.6 L 705.6 8.0 L 734.2 8.0 L 734.2 13.3 L 735.1 13.3 L 735.1 8.0 L 741.3 8.0 L 741.3 18.6 L 750.0 18.6 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc16539b)"/>
+          <path d="M 44.0 45.0 L 177.6 45.0 L 177.6 60.9 L 188.9 60.9 L 188.9 71.4 L 193.8 71.4 L 193.8 60.9 L 202.1 60.9 L 202.1 50.3 L 245.3 50.3 L 245.3 39.7 L 247.8 39.7 L 247.8 50.3 L 253.2 50.3 L 253.2 45.0 L 253.2 45.0 L 253.2 39.7 L 288.0 39.7 L 288.0 50.3 L 295.9 50.3 L 295.9 60.9 L 304.2 60.9 L 304.2 71.4 L 540.8 71.4 L 540.8 66.1 L 564.9 66.1 L 564.9 71.4 L 564.9 71.4 L 564.9 76.7 L 596.0 76.7 L 596.0 60.9 L 612.6 60.9 L 612.6 45.0 L 620.9 45.0 L 620.9 55.6 L 626.3 55.6 L 626.3 39.7 L 637.1 39.7 L 637.1 55.6 L 642.5 55.6 L 642.5 39.7 L 658.3 39.7 L 658.3 23.9 L 664.5 23.9 L 664.5 34.4 L 667.8 34.4 L 667.8 23.9 L 676.5 23.9 L 676.5 29.1 L 686.9 29.1 L 686.9 18.6 L 705.6 18.6 L 705.6 8.0 L 734.2 8.0 L 734.2 13.3 L 735.1 13.3 L 735.1 8.0 L 741.3 8.0 L 741.3 18.6 L 750.0 18.6" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="326.1" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-5</text><text x="739.1" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+5</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Collin</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">35</span><span class="muted2">&ndash;</span><span class="gold">32</span>&nbsp;&nbsp;<span class="teal">net +3</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc30711a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc30711b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="44.0" y="8" width="207.9" height="74" fill="var(--shade)"/><rect x="329.1" y="8" width="62.7" height="74" fill="var(--shade)"/><rect x="391.8" y="8" width="219.1" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+4</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-4</text>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 63.5 L 90.1 63.5 L 90.1 35.8 L 96.3 35.8 L 96.3 54.2 L 101.7 54.2 L 101.7 26.5 L 101.7 26.5 L 101.7 17.2 L 131.6 17.2 L 131.6 26.5 L 131.6 26.5 L 131.6 35.8 L 166.4 35.8 L 166.4 17.2 L 177.6 17.2 L 177.6 45.0 L 188.9 45.0 L 188.9 63.5 L 193.8 63.5 L 193.8 45.0 L 202.1 45.0 L 202.1 26.5 L 245.3 26.5 L 245.3 8.0 L 247.8 8.0 L 247.8 26.5 L 342.4 26.5 L 342.4 45.0 L 353.2 45.0 L 353.2 26.5 L 361.5 26.5 L 361.5 54.2 L 412.6 54.2 L 412.6 72.8 L 418.8 72.8 L 418.8 45.0 L 426.3 45.0 L 426.3 72.8 L 433.3 72.8 L 433.3 45.0 L 439.5 45.0 L 439.5 54.2 L 442.9 54.2 L 442.9 26.5 L 449.5 26.5 L 449.5 45.0 L 459.5 45.0 L 459.5 63.5 L 473.6 63.5 L 473.6 45.0 L 481.0 45.0 L 481.0 63.5 L 486.4 63.5 L 486.4 54.2 L 503.5 54.2 L 503.5 35.8 L 540.8 35.8 L 540.8 26.5 L 564.9 26.5 L 564.9 35.8 L 564.9 35.8 L 564.9 45.0 L 596.0 45.0 L 596.0 17.2 L 750.0 17.2 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc30711a)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 63.5 L 90.1 63.5 L 90.1 35.8 L 96.3 35.8 L 96.3 54.2 L 101.7 54.2 L 101.7 26.5 L 101.7 26.5 L 101.7 17.2 L 131.6 17.2 L 131.6 26.5 L 131.6 26.5 L 131.6 35.8 L 166.4 35.8 L 166.4 17.2 L 177.6 17.2 L 177.6 45.0 L 188.9 45.0 L 188.9 63.5 L 193.8 63.5 L 193.8 45.0 L 202.1 45.0 L 202.1 26.5 L 245.3 26.5 L 245.3 8.0 L 247.8 8.0 L 247.8 26.5 L 342.4 26.5 L 342.4 45.0 L 353.2 45.0 L 353.2 26.5 L 361.5 26.5 L 361.5 54.2 L 412.6 54.2 L 412.6 72.8 L 418.8 72.8 L 418.8 45.0 L 426.3 45.0 L 426.3 72.8 L 433.3 72.8 L 433.3 45.0 L 439.5 45.0 L 439.5 54.2 L 442.9 54.2 L 442.9 26.5 L 449.5 26.5 L 449.5 45.0 L 459.5 45.0 L 459.5 63.5 L 473.6 63.5 L 473.6 45.0 L 481.0 45.0 L 481.0 63.5 L 486.4 63.5 L 486.4 54.2 L 503.5 54.2 L 503.5 35.8 L 540.8 35.8 L 540.8 26.5 L 564.9 26.5 L 564.9 35.8 L 564.9 35.8 L 564.9 45.0 L 596.0 45.0 L 596.0 17.2 L 750.0 17.2 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc30711b)"/>
+          <path d="M 44.0 45.0 L 78.0 45.0 L 78.0 63.5 L 90.1 63.5 L 90.1 35.8 L 96.3 35.8 L 96.3 54.2 L 101.7 54.2 L 101.7 26.5 L 101.7 26.5 L 101.7 17.2 L 131.6 17.2 L 131.6 26.5 L 131.6 26.5 L 131.6 35.8 L 166.4 35.8 L 166.4 17.2 L 177.6 17.2 L 177.6 45.0 L 188.9 45.0 L 188.9 63.5 L 193.8 63.5 L 193.8 45.0 L 202.1 45.0 L 202.1 26.5 L 245.3 26.5 L 245.3 8.0 L 247.8 8.0 L 247.8 26.5 L 342.4 26.5 L 342.4 45.0 L 353.2 45.0 L 353.2 26.5 L 361.5 26.5 L 361.5 54.2 L 412.6 54.2 L 412.6 72.8 L 418.8 72.8 L 418.8 45.0 L 426.3 45.0 L 426.3 72.8 L 433.3 72.8 L 433.3 45.0 L 439.5 45.0 L 439.5 54.2 L 442.9 54.2 L 442.9 26.5 L 449.5 26.5 L 449.5 45.0 L 459.5 45.0 L 459.5 63.5 L 473.6 63.5 L 473.6 45.0 L 481.0 45.0 L 481.0 63.5 L 486.4 63.5 L 486.4 54.2 L 503.5 54.2 L 503.5 35.8 L 540.8 35.8 L 540.8 26.5 L 564.9 26.5 L 564.9 35.8 L 564.9 35.8 L 564.9 45.0 L 596.0 45.0 L 596.0 17.2 L 750.0 17.2" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="248.9" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+2</text><text x="388.8" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-1</text><text x="608.0" y="17" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="end">+3</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">JacobBlack</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">3</span><span class="muted2">&ndash;</span><span class="gold">5</span>&nbsp;&nbsp;<span class="gold">net -2</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc32738a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc32738b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="735.1" y="8" width="14.9" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+3</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-3</text>
+          <path d="M 44.0 45.0 L 735.1 45.0 L 735.1 32.7 L 741.3 32.7 L 741.3 57.3 L 742.1 57.3 L 742.1 45.0 L 746.3 45.0 L 746.3 82.0 L 750.0 82.0 L 750.0 69.7 L 750.0 69.7 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc32738a)"/>
+          <path d="M 44.0 45.0 L 735.1 45.0 L 735.1 32.7 L 741.3 32.7 L 741.3 57.3 L 742.1 57.3 L 742.1 45.0 L 746.3 45.0 L 746.3 82.0 L 750.0 82.0 L 750.0 69.7 L 750.0 69.7 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc32738b)"/>
+          <path d="M 44.0 45.0 L 735.1 45.0 L 735.1 32.7 L 741.3 32.7 L 741.3 57.3 L 742.1 57.3 L 742.1 45.0 L 746.3 45.0 L 746.3 82.0 L 750.0 82.0 L 750.0 69.7 L 750.0 69.7" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="747.0" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-2</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Jack</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">3</span><span class="muted2">&ndash;</span><span class="gold">5</span>&nbsp;&nbsp;<span class="gold">net -2</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc33063a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc33063b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="735.1" y="8" width="14.9" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+3</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-3</text>
+          <path d="M 44.0 45.0 L 735.1 45.0 L 735.1 32.7 L 741.3 32.7 L 741.3 57.3 L 742.1 57.3 L 742.1 45.0 L 746.3 45.0 L 746.3 82.0 L 750.0 82.0 L 750.0 69.7 L 750.0 69.7 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc33063a)"/>
+          <path d="M 44.0 45.0 L 735.1 45.0 L 735.1 32.7 L 741.3 32.7 L 741.3 57.3 L 742.1 57.3 L 742.1 45.0 L 746.3 45.0 L 746.3 82.0 L 750.0 82.0 L 750.0 69.7 L 750.0 69.7 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc33063b)"/>
+          <path d="M 44.0 45.0 L 735.1 45.0 L 735.1 32.7 L 741.3 32.7 L 741.3 57.3 L 742.1 57.3 L 742.1 45.0 L 746.3 45.0 L 746.3 82.0 L 750.0 82.0 L 750.0 69.7 L 750.0 69.7" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="747.0" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-2</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">26-</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">5</span><span class="muted2">&ndash;</span><span class="gold">11</span>&nbsp;&nbsp;<span class="gold">net -6</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc39990a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc39990b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="251.9" y="8" width="77.2" height="74" fill="var(--shade)"/><rect x="735.1" y="8" width="14.9" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+7</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-7</text>
+          <path d="M 44.0 45.0 L 253.2 45.0 L 253.2 39.7 L 253.2 39.7 L 253.2 34.4 L 288.0 34.4 L 288.0 45.0 L 295.9 45.0 L 295.9 55.6 L 304.2 55.6 L 304.2 66.1 L 735.1 66.1 L 735.1 60.9 L 741.3 60.9 L 741.3 71.4 L 742.1 71.4 L 742.1 66.1 L 746.3 66.1 L 746.3 82.0 L 750.0 82.0 L 750.0 76.7 L 750.0 76.7 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc39990a)"/>
+          <path d="M 44.0 45.0 L 253.2 45.0 L 253.2 39.7 L 253.2 39.7 L 253.2 34.4 L 288.0 34.4 L 288.0 45.0 L 295.9 45.0 L 295.9 55.6 L 304.2 55.6 L 304.2 66.1 L 735.1 66.1 L 735.1 60.9 L 741.3 60.9 L 741.3 71.4 L 742.1 71.4 L 742.1 66.1 L 746.3 66.1 L 746.3 82.0 L 750.0 82.0 L 750.0 76.7 L 750.0 76.7 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc39990b)"/>
+          <path d="M 44.0 45.0 L 253.2 45.0 L 253.2 39.7 L 253.2 39.7 L 253.2 34.4 L 288.0 34.4 L 288.0 45.0 L 295.9 45.0 L 295.9 55.6 L 304.2 55.6 L 304.2 66.1 L 735.1 66.1 L 735.1 60.9 L 741.3 60.9 L 741.3 71.4 L 742.1 71.4 L 742.1 66.1 L 746.3 66.1 L 746.3 82.0 L 750.0 82.0 L 750.0 76.7 L 750.0 76.7" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="326.1" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-4</text><text x="747.0" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-6</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Cooper</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">4</span><span class="muted2">&ndash;</span><span class="gold">10</span>&nbsp;&nbsp;<span class="gold">net -6</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc92241a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc92241b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="329.1" y="8" width="48.1" height="74" fill="var(--shade)"/><rect x="739.2" y="8" width="10.8" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+7</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-7</text>
+          <path d="M 44.0 45.0 L 342.4 45.0 L 342.4 55.6 L 353.2 55.6 L 353.2 45.0 L 361.5 45.0 L 361.5 60.9 L 741.3 60.9 L 741.3 71.4 L 742.1 71.4 L 742.1 66.1 L 746.3 66.1 L 746.3 82.0 L 750.0 82.0 L 750.0 76.7 L 750.0 76.7 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc92241a)"/>
+          <path d="M 44.0 45.0 L 342.4 45.0 L 342.4 55.6 L 353.2 55.6 L 353.2 45.0 L 361.5 45.0 L 361.5 60.9 L 741.3 60.9 L 741.3 71.4 L 742.1 71.4 L 742.1 66.1 L 746.3 66.1 L 746.3 82.0 L 750.0 82.0 L 750.0 76.7 L 750.0 76.7 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc92241b)"/>
+          <path d="M 44.0 45.0 L 342.4 45.0 L 342.4 55.6 L 353.2 55.6 L 353.2 45.0 L 361.5 45.0 L 361.5 60.9 L 741.3 60.9 L 741.3 71.4 L 742.1 71.4 L 742.1 66.1 L 746.3 66.1 L 746.3 82.0 L 750.0 82.0 L 750.0 76.7 L 750.0 76.7" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="374.3" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-3</text><text x="747.0" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-6</text>
+        </svg>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:800">Unknown</span>
+          <span style="font-size:12px;font-weight:800"><span class="teal">4</span><span class="muted2">&ndash;</span><span class="gold">11</span>&nbsp;&nbsp;<span class="gold">net -7</span></span>
+        </div>
+        <div class="panelbox" style="padding:6px 8px">
+        <svg viewBox="0 0 760 96" width="100%">
+          <clipPath id="pc80727a"><rect x="0" y="0" width="760" height="45.0"/></clipPath>
+          <clipPath id="pc80727b"><rect x="0" y="45.0" width="760" height="51.0"/></clipPath>
+          <rect x="251.9" y="8" width="139.9" height="74" fill="var(--shade)"/><line x1="391.8" y1="8" x2="391.8" y2="82" stroke="var(--grid)" stroke-dasharray="2 3"/>
+          <line x1="44" y1="45.0" x2="750" y2="45.0" stroke="var(--axis)" stroke-width="1"/>
+          <text x="38" y="12.0" fill="var(--muted2)" font-size="9" text-anchor="end">+7</text>
+          <text x="38" y="48.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text>
+          <text x="38" y="84.0" fill="var(--muted2)" font-size="9" text-anchor="end">-7</text>
+          <path d="M 44.0 45.0 L 253.2 45.0 L 253.2 39.7 L 253.2 39.7 L 253.2 34.4 L 288.0 34.4 L 288.0 45.0 L 295.9 45.0 L 295.9 55.6 L 304.2 55.6 L 304.2 66.1 L 342.4 66.1 L 342.4 76.7 L 353.2 76.7 L 353.2 66.1 L 361.5 66.1 L 361.5 82.0 L 750.0 82.0 L 750.0 45.0 Z" fill="var(--tealarea)" clip-path="url(#pc80727a)"/>
+          <path d="M 44.0 45.0 L 253.2 45.0 L 253.2 39.7 L 253.2 39.7 L 253.2 34.4 L 288.0 34.4 L 288.0 45.0 L 295.9 45.0 L 295.9 55.6 L 304.2 55.6 L 304.2 66.1 L 342.4 66.1 L 342.4 76.7 L 353.2 76.7 L 353.2 66.1 L 361.5 66.1 L 361.5 82.0 L 750.0 82.0 L 750.0 45.0 Z" fill="var(--goldarea)" clip-path="url(#pc80727b)"/>
+          <path d="M 44.0 45.0 L 253.2 45.0 L 253.2 39.7 L 253.2 39.7 L 253.2 34.4 L 288.0 34.4 L 288.0 45.0 L 295.9 45.0 L 295.9 55.6 L 304.2 55.6 L 304.2 66.1 L 342.4 66.1 L 342.4 76.7 L 353.2 76.7 L 353.2 66.1 L 361.5 66.1 L 361.5 82.0 L 750.0 82.0" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          <text x="388.8" y="17" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="end">-7</text>
+        </svg>
+        </div>
+      </div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:6px">
+    <h2 class="sec" style="margin-top:0">Squad Flow &mdash; Every Lineup, In Order</h2>
+    <div class="muted2" style="font-size:10px;margin-bottom:2px">Every substitution starts a new squad. Bars show each squad&#39;s net (points for&ndash;against shown above wider bars); the grid below shows exactly who was on the floor for each stretch.</div>
+    <div class="panelbox"><svg viewBox="0 0 760 310" width="100%"><line x1="399.9" y1="10" x2="399.9" y2="306" stroke="var(--grid)" stroke-dasharray="2 3"/><text x="230.0" y="9" fill="var(--axis)" font-size="9" text-anchor="middle" font-weight="700">H1</text><text x="575.0" y="9" fill="var(--axis)" font-size="9" text-anchor="middle" font-weight="700">H2</text><line x1="60" y1="60.0" x2="750" y2="60.0" stroke="var(--axis)" stroke-width="1"/><text x="54" y="63.0" fill="var(--muted2)" font-size="9" text-anchor="end">0</text><rect x="60.0" y="118" width="72.2" height="186" fill="var(--shade)" opacity="0.45"/><rect x="60.0" y="46.0" width="71.2" height="14.0" fill="var(--teal)" opacity="0.8" rx="2"/><text x="96.1" y="42.0" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="middle">+3</text><text x="96.1" y="130" font-size="8.5" text-anchor="middle"><tspan fill="var(--teal)" font-weight="700">7</tspan><tspan fill="var(--muted2)">&#8211;</tspan><tspan fill="var(--gold)" font-weight="700">4</tspan></text><rect x="133.0" y="118" width="23.1" height="186" fill="var(--shade)" opacity="0.45"/><rect x="133.0" y="60.0" width="22.1" height="9.3" fill="var(--gold)" opacity="0.8" rx="2"/><text x="144.6" y="79.3" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="middle">-2</text><rect x="156.1" y="50.7" width="28.6" height="9.3" fill="var(--teal)" opacity="0.8" rx="2"/><text x="170.9" y="46.7" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="middle">+2</text><rect x="185.7" y="118" width="77.5" height="186" fill="var(--shade)" opacity="0.45"/><rect x="185.7" y="60.0" width="76.5" height="4.7" fill="var(--gold)" opacity="0.8" rx="2"/><text x="224.5" y="74.7" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="middle">-1</text><text x="224.5" y="130" font-size="8.5" text-anchor="middle"><tspan fill="var(--teal)" font-weight="700">6</tspan><tspan fill="var(--muted2)">&#8211;</tspan><tspan fill="var(--gold)" font-weight="700">7</tspan></text><text x="282.9" y="56.0" fill="var(--muted2)" font-size="9.5" font-weight="800" text-anchor="middle">0</text><rect x="302.6" y="118" width="36.1" height="186" fill="var(--shade)" opacity="0.45"/><rect x="302.6" y="60.0" width="35.1" height="18.7" fill="var(--gold)" opacity="0.8" rx="2"/><text x="320.6" y="88.7" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="middle">-4</text><rect x="338.7" y="60.0" width="46.1" height="14.0" fill="var(--gold)" opacity="0.8" rx="2"/><text x="362.2" y="84.0" fill="var(--gold)" font-size="9.5" font-weight="800" text-anchor="middle">-3</text><text x="362.2" y="130" font-size="8.5" text-anchor="middle"><tspan fill="var(--teal)" font-weight="700">2</tspan><tspan fill="var(--muted2)">&#8211;</tspan><tspan fill="var(--gold)" font-weight="700">5</tspan></text><rect x="385.7" y="118" width="14.2" height="186" fill="var(--shade)" opacity="0.45"/><rect x="399.9" y="50.7" width="140.2" height="9.3" fill="var(--teal)" opacity="0.8" rx="2"/><text x="470.5" y="46.7" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="middle">+2</text><text x="470.5" y="130" font-size="8.5" text-anchor="middle"><tspan fill="var(--teal)" font-weight="700">14</tspan><tspan fill="var(--muted2)">&#8211;</tspan><tspan fill="var(--gold)" font-weight="700">12</tspan></text><rect x="541.1" y="118" width="73.0" height="186" fill="var(--shade)" opacity="0.45"/><rect x="541.1" y="50.7" width="72.0" height="9.3" fill="var(--teal)" opacity="0.8" rx="2"/><text x="577.6" y="46.7" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="middle">+2</text><text x="577.6" y="130" font-size="8.5" text-anchor="middle"><tspan fill="var(--teal)" font-weight="700">4</tspan><tspan fill="var(--muted2)">&#8211;</tspan><tspan fill="var(--gold)" font-weight="700">2</tspan></text><rect x="614.1" y="18.0" width="120.3" height="42.0" fill="var(--teal)" opacity="0.8" rx="2"/><text x="674.8" y="14.0" fill="var(--teal)" font-size="9.5" font-weight="800" text-anchor="middle">+9</text><text x="674.8" y="130" font-size="8.5" text-anchor="middle"><tspan fill="var(--teal)" font-weight="700">18</tspan><tspan fill="var(--muted2)">&#8211;</tspan><tspan fill="var(--gold)" font-weight="700">9</tspan></text><rect x="735.4" y="118" width="1.6" height="186" fill="var(--shade)" opacity="0.45"/><rect x="735.4" y="55.3" width="1.5" height="4.7" fill="var(--teal)" opacity="0.8" rx="2"/><rect x="737.4" y="118" width="2.0" height="186" fill="var(--shade)" opacity="0.45"/><rect x="739.5" y="60.0" width="1.8" height="9.3" fill="var(--gold)" opacity="0.8" rx="2"/><rect x="742.3" y="118" width="7.7" height="186" fill="var(--shade)" opacity="0.45"/><rect x="742.3" y="60.0" width="6.7" height="4.7" fill="var(--gold)" opacity="0.8" rx="2"/><text x="52" y="144" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Henry</text><rect x="60.5" y="136" width="71.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="132.7" y="136" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="133.5" y="136" width="22.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="156.6" y="136" width="28.6" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="339.2" y="136" width="46.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="386.2" y="136" width="13.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="400.4" y="136" width="140.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="614.6" y="136" width="120.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="159" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Xia</text><rect x="186.2" y="151" width="76.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="263.7" y="151" width="38.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="541.6" y="151" width="72.0" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="614.6" y="151" width="120.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="735.9" y="151" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="174" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Will</text><rect x="60.5" y="166" width="71.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="132.7" y="166" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="133.5" y="166" width="22.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="156.6" y="166" width="28.6" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="186.2" y="166" width="76.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="303.1" y="166" width="35.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="339.2" y="166" width="46.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="386.2" y="166" width="13.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="400.4" y="166" width="140.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="541.6" y="166" width="72.0" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="614.6" y="166" width="120.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="735.9" y="166" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.5" y="166" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="189" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Miles</text><rect x="60.5" y="181" width="71.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="132.7" y="181" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="133.5" y="181" width="22.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="156.6" y="181" width="28.6" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="186.2" y="181" width="76.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="263.7" y="181" width="38.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="303.1" y="181" width="35.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="386.2" y="181" width="13.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="400.4" y="181" width="140.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="614.6" y="181" width="120.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="742.8" y="181" width="6.7" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="204" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Josh</text><rect x="60.5" y="196" width="71.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="133.5" y="196" width="22.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="156.6" y="196" width="28.6" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="400.4" y="196" width="140.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="541.6" y="196" width="72.0" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="219" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Mavric</text><rect x="186.2" y="211" width="76.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="263.7" y="211" width="38.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="303.1" y="211" width="35.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="541.6" y="211" width="72.0" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="614.6" y="211" width="120.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="735.9" y="211" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.5" y="211" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.9" y="211" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="740.0" y="211" width="1.8" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="234" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Collin</text><rect x="60.5" y="226" width="71.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="132.7" y="226" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="133.5" y="226" width="22.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="156.6" y="226" width="28.6" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="186.2" y="226" width="76.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="339.2" y="226" width="46.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="386.2" y="226" width="13.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="400.4" y="226" width="140.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="541.6" y="226" width="72.0" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="249" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">JacobBlack</text><rect x="735.9" y="241" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.5" y="241" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.9" y="241" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="740.0" y="241" width="1.8" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="742.8" y="241" width="6.7" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="264" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Jack</text><rect x="735.9" y="256" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.5" y="256" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.9" y="256" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="740.0" y="256" width="1.8" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="742.8" y="256" width="6.7" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="279" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">26-</text><rect x="263.7" y="271" width="38.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="303.1" y="271" width="35.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="735.9" y="271" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.5" y="271" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="737.9" y="271" width="1.5" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="740.0" y="271" width="1.8" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="742.8" y="271" width="6.7" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="294" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Cooper</text><rect x="339.2" y="286" width="46.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="740.0" y="286" width="1.8" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="742.8" y="286" width="6.7" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><text x="52" y="309" fill="var(--ink)" font-size="10" font-weight="700" text-anchor="end">Unknown</text><rect x="263.7" y="301" width="38.3" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="303.1" y="301" width="35.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="339.2" y="301" width="46.1" height="10" rx="3" fill="var(--teal)" opacity="0.55"/><rect x="386.2" y="301" width="13.2" height="10" rx="3" fill="var(--teal)" opacity="0.55"/></svg></div>
+  </div>
+
+  <div class="pad" style="padding-top:12px;padding-bottom:6px">
+    <h2 class="sec" style="margin-top:0">Lineups &mdash; Combined Across the Game</h2>
+    <table>
+      <thead><tr><th style="text-align:left">Lineup</th><th>Stints</th><th>Minutes</th><th class="teal">Home</th><th class="gold">Away</th><th>Net</th></tr></thead>
+      <tbody><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Collin &middot; Henry &middot; Josh &middot; Miles &middot; Will</td><td>4</td><td>10:56</td><td><b class="teal">23</b></td><td><b class="gold">18</b></td><td><b class="teal">+5</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Henry &middot; Mavric &middot; Miles &middot; Will &middot; Xia</td><td>1</td><td>4:59</td><td><b class="teal">18</b></td><td><b class="gold">9</b></td><td><b class="teal">+9</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Collin &middot; Mavric &middot; Miles &middot; Will &middot; Xia</td><td>1</td><td>3:11</td><td><b class="teal">6</b></td><td><b class="gold">7</b></td><td><b class="gold">-1</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Collin &middot; Josh &middot; Mavric &middot; Will &middot; Xia</td><td>1</td><td>3:00</td><td><b class="teal">4</b></td><td><b class="gold">2</b></td><td><b class="teal">+2</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Collin &middot; Cooper &middot; Henry &middot; Unknown &middot; Will</td><td>1</td><td>1:56</td><td><b class="teal">2</b></td><td><b class="gold">5</b></td><td><b class="gold">-3</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Mavric &middot; Miles &middot; Unknown &middot; Xia</td><td>1</td><td>1:37</td><td><b class="teal">2</b></td><td><b class="gold">2</b></td><td><b class="teal">0</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Mavric &middot; Miles &middot; Unknown &middot; Will</td><td>1</td><td>1:29</td><td><b class="teal">0</b></td><td><b class="gold">4</b></td><td><b class="gold">-4</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Collin &middot; Henry &middot; Miles &middot; Unknown &middot; Will</td><td>1</td><td>0:35</td><td><b class="teal">0</b></td><td><b class="gold">0</b></td><td><b class="teal">0</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Cooper &middot; Jack &middot; JacobBlack &middot; Miles</td><td>1</td><td>0:19</td><td><b class="teal">2</b></td><td><b class="gold">3</b></td><td><b class="gold">-1</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Cooper &middot; Jack &middot; JacobBlack &middot; Mavric</td><td>1</td><td>0:07</td><td><b class="teal">0</b></td><td><b class="gold">2</b></td><td><b class="gold">-2</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Jack &middot; JacobBlack &middot; Mavric</td><td>1</td><td>0:05</td><td><b class="teal">0</b></td><td><b class="gold">0</b></td><td><b class="teal">0</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Jack &middot; JacobBlack &middot; Mavric &middot; Will &middot; Xia</td><td>1</td><td>0:04</td><td><b class="teal">1</b></td><td><b class="gold">0</b></td><td><b class="teal">+1</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">Collin &middot; Henry &middot; Miles &middot; Will</td><td>1</td><td>0:02</td><td><b class="teal">0</b></td><td><b class="gold">0</b></td><td><b class="teal">0</b></td></tr><tr><td class="lab" style="text-align:left;font-weight:700;font-size:10.5px">26- &middot; Jack &middot; JacobBlack &middot; Mavric &middot; Will</td><td>1</td><td>0:01</td><td><b class="teal">0</b></td><td><b class="gold">0</b></td><td><b class="teal">0</b></td></tr></tbody>
+    </table>
+    <div class="muted2" style="font-size:10px;margin-top:8px">Identical five-man groups combined across all their stretches on the floor together. Small samples &mdash; a lineup that played 90 seconds can swing wildly.</div>
+  </div>
+
+  <div class="foot"><span>Player tracking via Sub In/Out events</span><span>Hoop Rhythm Tracker &nbsp;&middot;&nbsp; Page 3 of 3</span></div>
+</div>
+
+
+<script>
+
+var HOME_NAME="Aliso", AWAY_NAME="SM";
+var MARGIN=[[0, 0], [82, -2], [111, 1], [126, -1], [139, 2], [139, 3], [211, 2], [211, 1], [295, 3], [322, 0], [349, -2], [361, 0], [381, 2], [485, 4], [491, 2], [504, 3], [504, 4], [588, 2], [607, 0], [627, -2], [719, -4], [745, -2], [765, -5], [888, -7], [903, -4], [921, -7], [938, -4], [953, -5], [961, -2], [977, -4], [1001, -6], [1035, -4], [1053, -6], [1066, -5], [1107, -3], [1197, -2], [1255, -3], [1255, -4], [1330, -1], [1370, 2], [1390, 0], [1403, 3], [1429, 0], [1442, 3], [1480, 6], [1495, 4], [1503, 6], [1524, 5], [1549, 7], [1594, 9], [1663, 8], [1665, 9], [1680, 7], [1682, 8], [1692, 5], [1701, 6]];
+var MOM={tMax:1701,mMin:-8,mMax:10,grid:[-8, -6, -4, -2, 0, 2, 4, 6, 8, 10],seps:[838],labels:[["H1", 419.0], ["H2", 1269.5]],finalM:6};
+var CONV={"Q1": [29, 42], "Q2": [59, 43]};
+var DONUTS=[["H1", 57, 43, "13:58"], ["H2", 46, 54, "14:23"]];
+var POSS={"Q1": [{"q": "Q1", "t": "AWAY", "m": "T", "s": 33}, {"q": "Q1", "t": "HOME", "m": "T", "s": 39}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 66}, {"q": "Q1", "t": "HOME", "m": "X", "s": 73}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 82}, {"q": "Q1", "t": "HOME", "m": "3", "s": 111}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 126}, {"q": "Q1", "t": "HOME", "m": "4", "s": 139}, {"q": "Q1", "t": "AWAY", "m": "T", "s": 152}, {"q": "Q1", "t": "HOME", "m": "X", "s": 181}, {"q": "Q1", "t": "HOME", "m": "X", "s": 232}, {"q": "Q1", "t": "AWAY", "m": "T", "s": 237}, {"q": "Q1", "t": "HOME", "m": "X", "s": 267}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 271}, {"q": "Q1", "t": "HOME", "m": "2", "s": 295}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 301}, {"q": "Q1", "t": "HOME", "m": "X", "s": 318}, {"q": "Q1", "t": "AWAY", "m": "3", "s": 322}, {"q": "Q1", "t": "HOME", "m": "T", "s": 347}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 349}, {"q": "Q1", "t": "HOME", "m": "2", "s": 361}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 375}, {"q": "Q1", "t": "HOME", "m": "2", "s": 381}, {"q": "Q1", "t": "HOME", "m": "X", "s": 433}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 438}, {"q": "Q1", "t": "HOME", "m": "T", "s": 442}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 483}, {"q": "Q1", "t": "HOME", "m": "2", "s": 485}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 491}, {"q": "Q1", "t": "HOME", "m": "X", "s": 501}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 504}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 528}, {"q": "Q1", "t": "HOME", "m": "X", "s": 566}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 588}, {"q": "Q1", "t": "HOME", "m": "T", "s": 598}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 607}, {"q": "Q1", "t": "HOME", "m": "X", "s": 624}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 627}, {"q": "Q1", "t": "HOME", "m": "T", "s": 632}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 651}, {"q": "Q1", "t": "AWAY", "m": "2", "s": 719}, {"q": "Q1", "t": "HOME", "m": "X", "s": 732}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 740}, {"q": "Q1", "t": "HOME", "m": "2", "s": 745}, {"q": "Q1", "t": "AWAY", "m": "3", "s": 765}, {"q": "Q1", "t": "HOME", "m": "X", "s": 815}, {"q": "Q1", "t": "AWAY", "m": "X", "s": 838}, {"q": "Q1", "t": "HOME", "m": "X", "s": 838}], "Q2": [{"q": "Q2", "t": "AWAY", "m": "X", "s": 859}, {"q": "Q2", "t": "HOME", "m": "T", "s": 867}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 888}, {"q": "Q2", "t": "HOME", "m": "3", "s": 903}, {"q": "Q2", "t": "AWAY", "m": "3", "s": 921}, {"q": "Q2", "t": "HOME", "m": "3", "s": 938}, {"q": "Q2", "t": "HOME", "m": "3", "s": 961}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 977}, {"q": "Q2", "t": "HOME", "m": "X", "s": 998}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 1001}, {"q": "Q2", "t": "HOME", "m": "T", "s": 1022}, {"q": "Q2", "t": "AWAY", "m": "T", "s": 1026}, {"q": "Q2", "t": "HOME", "m": "2", "s": 1035}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 1053}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1094}, {"q": "Q2", "t": "HOME", "m": "2", "s": 1107}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1132}, {"q": "Q2", "t": "HOME", "m": "T", "s": 1152}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1156}, {"q": "Q2", "t": "HOME", "m": "X", "s": 1166}, {"q": "Q2", "t": "AWAY", "m": "F", "s": 1186}, {"q": "Q2", "t": "AWAY", "m": "T", "s": 1216}, {"q": "Q2", "t": "HOME", "m": "F", "s": 1245}, {"q": "Q2", "t": "HOME", "m": "X", "s": 1279}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1294}, {"q": "Q2", "t": "HOME", "m": "X", "s": 1311}, {"q": "Q2", "t": "AWAY", "m": "T", "s": 1316}, {"q": "Q2", "t": "HOME", "m": "3", "s": 1330}, {"q": "Q2", "t": "AWAY", "m": "T", "s": 1366}, {"q": "Q2", "t": "HOME", "m": "3", "s": 1370}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 1390}, {"q": "Q2", "t": "HOME", "m": "3", "s": 1403}, {"q": "Q2", "t": "AWAY", "m": "3", "s": 1429}, {"q": "Q2", "t": "HOME", "m": "3", "s": 1442}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1475}, {"q": "Q2", "t": "HOME", "m": "3", "s": 1480}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 1495}, {"q": "Q2", "t": "HOME", "m": "2", "s": 1503}, {"q": "Q2", "t": "HOME", "m": "2", "s": 1549}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1576}, {"q": "Q2", "t": "HOME", "m": "2", "s": 1594}, {"q": "Q2", "t": "AWAY", "m": "X", "s": 1615}, {"q": "Q2", "t": "HOME", "m": "X", "s": 1653}, {"q": "Q2", "t": "AWAY", "m": "2", "s": 1680}, {"q": "Q2", "t": "AWAY", "m": "3", "s": 1692}]};
+var QSCORE={"Q1": [19, 24], "Q2": [39, 28]};
+var COURT={"HOME": {"col": "--teal", "three_val": "10 made \u00b7 30 pts", "two_val": "10 made \u00b7 20 pts", "ft_val": "8 / 15 \u00b7 53%", "fg": "20 / 45", "fgpct": 44}, "AWAY": {"col": "--gold", "three_val": "5 made \u00b7 15 pts", "two_val": "15 made \u00b7 30 pts", "ft_val": "7 / 12 \u00b7 58%", "fg": "20 / 41", "fgpct": 49}};
+var PORDER=["Q1", "Q2"]; var PLBL={"Q1": "H1", "Q2": "H2"};
+
+function cvar(n){return getComputedStyle(document.body).getPropertyValue(n).trim();}
+function drawMomentum(){
+  var svg=document.getElementById('momentum'); svg.innerHTML='';
+  var W=760,H=190,padL=58,padR=12,padT=14,padB=20, tMax=MOM.tMax,mMin=MOM.mMin,mMax=MOM.mMax;
+  var ns='http://www.w3.org/2000/svg';
+  var TEAL=cvar('--teal'),GOLD=cvar('--gold'),GRID=cvar('--grid'),AXIS=cvar('--axis'),MU=cvar('--muted2'),
+      TAREA=cvar('--tealarea'),GAREA=cvar('--goldarea'),INK=cvar('--ink');
+  function x(t){return padL+(t/tMax)*(W-padL-padR);}
+  function y(m){return padT+(1-(m-mMin)/(mMax-mMin))*(H-padT-padB);}
+  function mk(tag,a,txt){var e=document.createElementNS(ns,tag);for(var k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e;}
+  MOM.grid.forEach(function(m){
+    mk('line',{x1:padL,x2:W-padR,y1:y(m),y2:y(m),stroke:GRID,'stroke-width':m===0?0:1});
+    if(m!==0) mk('text',{x:padL-8,y:y(m)+3,fill:MU,'font-size':9,'text-anchor':'end'},(m>0?'+':'')+m);
+  });
+  MOM.seps.forEach(function(t){mk('line',{x1:x(t),x2:x(t),y1:padT,y2:H-padB,stroke:GRID,'stroke-dasharray':'2 3'});});
+  MOM.labels.forEach(function(L){mk('text',{x:x(L[1]),y:H-6,fill:MU,'font-size':10,'text-anchor':'middle','font-weight':700},L[0]);});
+  var d='M '+x(0)+' '+y(0);
+  for(var i=1;i<MARGIN.length;i++){d+=' L '+x(MARGIN[i][0])+' '+y(MARGIN[i-1][1])+' L '+x(MARGIN[i][0])+' '+y(MARGIN[i][1]);}
+  var area=d+' L '+x(tMax)+' '+y(0)+' Z';
+  var defs=mk('defs',{});
+  function clip(id,yy,hh){var cp=document.createElementNS(ns,'clipPath');cp.setAttribute('id',id);var r=document.createElementNS(ns,'rect');r.setAttribute('x',0);r.setAttribute('y',yy);r.setAttribute('width',W);r.setAttribute('height',hh);cp.appendChild(r);defs.appendChild(cp);}
+  clip('above',padT-2,y(0)-(padT-2)); clip('below',y(0),(H-padB)-y(0));
+  mk('path',{d:area,fill:TAREA,'clip-path':'url(#above)'});
+  mk('path',{d:area,fill:GAREA,'clip-path':'url(#below)'});
+  mk('line',{x1:padL,x2:W-padR,y1:y(0),y2:y(0),stroke:AXIS,'stroke-width':1.5});
+  mk('text',{x:padL-8,y:y(0)+3,fill:INK,'font-size':9,'text-anchor':'end','font-weight':700},'TIE');
+  mk('text',{x:6,y:y(Math.min(mMax,1))+3,fill:TEAL,'font-size':9.5,'font-weight':800},'AHEAD');
+  mk('text',{x:6,y:y(Math.max(mMin,-4))+3,fill:GOLD,'font-size':9.5,'font-weight':800},'TRAILING');
+  mk('path',{d:d,fill:'none',stroke:GOLD,'stroke-width':2});
+  mk('circle',{cx:x(tMax),cy:y(MOM.finalM),r:3.5,fill:GOLD});
+  mk('text',{x:x(tMax)-4,y:y(MOM.finalM)-8,fill:GOLD,'font-size':9,'text-anchor':'end','font-weight':700},(MOM.finalM>0?'+':'')+MOM.finalM);
+  var hp=Math.max.apply(null,MARGIN.map(function(p){return p[1];}));
+  var ap=Math.min.apply(null,MARGIN.map(function(p){return p[1];}));
+  document.getElementById('momnote').textContent='Biggest lead: '+HOME_NAME+' +'+Math.max(0,hp)+' · '+AWAY_NAME+' +'+Math.max(0,-ap);
+}
+function drawDonuts(){
+  var wrap=document.getElementById('donuts'); wrap.innerHTML='';
+  var TEAL=cvar('--teal'),GOLD=cvar('--gold'),INK=cvar('--ink');
+  DONUTS.forEach(function(q){
+    var home=q[1],r=20,c=2*Math.PI*r,off=c*(1-home/100);
+    var div=document.createElement('div');div.className='donut';
+    div.innerHTML='<div class="qh">'+q[0]+'</div>'+
+      '<svg viewBox="0 0 54 54" width="52" height="52">'+
+      '<circle cx="27" cy="27" r="'+r+'" fill="none" stroke="'+GOLD+'" stroke-width="8"/>'+
+      '<circle cx="27" cy="27" r="'+r+'" fill="none" stroke="'+TEAL+'" stroke-width="8" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 27 27)"/>'+
+      '<text x="27" y="30.5" text-anchor="middle" fill="'+INK+'" font-size="10.5" font-weight="800">'+q[3]+'</text></svg>'+
+      '<div class="pc"><span class="teal">'+q[1]+'%</span> <span class="muted2">·</span> <span class="gold">'+q[2]+'%</span></div>';
+    wrap.appendChild(div);
+  });
+}
+function drawConv(){
+  var wrap=document.getElementById('conv'); wrap.innerHTML='';
+  PORDER.forEach(function(q){
+    if(!CONV[q])return;
+    var h=CONV[q][0], a=CONV[q][1];
+    var hh=Math.round(h/100*70), ah=Math.round(a/100*70);
+    var div=document.createElement('div');div.className='convq';
+    div.innerHTML='<div class="convtrack">'+
+      '<div class="convbar h" style="height:'+hh+'px"><span>'+h+'%</span></div>'+
+      '<div class="convbar a" style="height:'+ah+'px"><span>'+a+'%</span></div></div>'+
+      '<div class="qh">'+(PLBL[q]||q)+'</div>';
+    wrap.appendChild(div);
+  });
+}
+function drawCourt(team){
+  var d=COURT[team], col=cvar(d.col), ink=cvar('--ink'), panel=cvar('--panel'), line=cvar('--line');
+  var light=document.body.classList.contains('light');
+  var lineCol = light ? '#3f4854' : col, outerStroke = light ? '#3f4854' : line;
+  var keyOp = light ? '0' : '0.09';
+  var oMid=light?0.8:0.55, oKey=light?0.8:0.5, o3=light?0.85:0.65, oRect=light?0.85:1;
+  function chip(y,label,val){
+    return '<rect x="26" y="'+(y-15)+'" width="188" height="30" rx="8" fill="'+panel+'" fill-opacity="0.92" stroke="'+col+'" stroke-opacity="0.55"/>'+
+      '<text x="38" y="'+(y+4)+'" fill="'+col+'" font-size="12.5" font-weight="800">'+label+'</text>'+
+      '<text x="202" y="'+(y+4)+'" text-anchor="end" fill="'+ink+'" font-size="10.5" font-weight="700">'+val+'</text>';
+  }
+  var svg='<svg viewBox="0 0 240 256" width="100%">'+
+    '<rect x="6" y="6" width="228" height="244" rx="10" fill="'+panel+'" stroke="'+outerStroke+'" stroke-opacity="'+oRect+'"/>'+
+    '<path d="M94,6 A26,26 0 0 0 146,6" fill="none" stroke="'+lineCol+'" stroke-opacity="'+oMid+'" stroke-width="1.5"/>'+
+    '<rect x="88" y="142" width="64" height="108" fill="'+col+'" fill-opacity="'+keyOp+'" stroke="'+lineCol+'" stroke-opacity="'+oKey+'" stroke-width="1.4"/>'+
+    '<circle cx="120" cy="142" r="30" fill="none" stroke="'+lineCol+'" stroke-opacity="'+oKey+'" stroke-width="1.4"/>'+
+    '<path d="M28,250 L28,134 A128,128 0 0 1 212,134 L212,250" fill="none" stroke="'+lineCol+'" stroke-opacity="'+o3+'" stroke-width="1.7"/>'+
+    '<line x1="103" y1="230" x2="137" y2="230" stroke="'+lineCol+'" stroke-width="2.4"/>'+
+    '<circle cx="120" cy="223" r="6" fill="none" stroke="'+lineCol+'" stroke-width="2"/>'+
+    chip(58,'3PT', d.three_val)+chip(128,'2PT', d.two_val)+chip(198,'FT', d.ft_val)+
+    '</svg>';
+  document.getElementById('court-'+team).innerHTML=svg;
+}
+function cellHTML(p,team){
+  if(!p || p.t!==team) return '<div class="cell"></div>';
+  var side = team==='HOME'?'h':'a';
+  if(/^\d/.test(p.m)) return '<div class="cell score '+side+'">'+p.m+'</div>';
+  if(p.m==='X') return '<div class="cell miss '+side+'">X</div>';
+  return '<div class="cell ev '+side+'">'+p.m+'</div>';
+}
+function buildFlow(){
+  var flow=document.getElementById('flow'); flow.innerHTML='';
+  PORDER.forEach(function(q){
+    var seq=POSS[q]; if(!seq)return;
+    var hpts=QSCORE[q][0], apts=QSCORE[q][1];
+    var hc=seq.filter(function(p){return p.t==='HOME'}).length;
+    var ac=seq.filter(function(p){return p.t==='AWAY'}).length;
+    var top='',bot='';
+    seq.forEach(function(p){ top+=cellHTML(p,'HOME'); bot+=cellHTML(p,'AWAY'); });
+    var diff=hpts-apts;
+    var dcls=diff>0?'teal':(diff<0?'gold':'muted2');
+    var dtxt=diff===0?'Even':((diff>0?'+':'−')+Math.abs(diff));
+    var blk=document.createElement('div');blk.className='qblock';
+    blk.innerHTML='<div class="qbhead"><span class="ql">'+(PLBL[q]||q)+'</span>'+
+      '<div style="text-align:right">'+
+        '<div class="qs"><span class="teal">'+HOME_NAME+' '+hpts+'</span> &ndash; <span class="gold">'+apts+'</span> '+AWAY_NAME+'</div>'+
+        '<div class="qdiff">margin (H&minus;A) <b class="'+dcls+'">'+dtxt+'</b></div>'+
+      '</div></div>'+
+      '<div class="lanes"><div class="lanetag"><div class="h">HOME</div><div class="a" style="margin-top:5px">AWAY</div></div>'+
+      '<div class="lanewrap"><div class="lane">'+top+'</div><div class="lane">'+bot+'</div></div></div>'+
+      '<div class="qbfoot"><span>'+seq.length+' possessions &nbsp;·&nbsp; HOME '+hc+' · AWAY '+ac+'</span><span>earlier &rarr; later</span></div>';
+    flow.appendChild(blk);
+  });
+}
+function fitPrint(){
+  var pageW=200*96/25.4, pageH=263*96/25.4, safety=0.985;
+  document.querySelectorAll('.sheet').forEach(function(s){
+    s.style.zoom=1; var h=s.getBoundingClientRect().height;
+    var z=Math.min(pageW/820, pageH/h)*safety; if(z<1) s.style.zoom=z;
+  });
+}
+function render(){ drawCourt('HOME'); drawCourt('AWAY'); drawMomentum(); drawDonuts(); drawConv(); buildFlow();
+  if(new URLSearchParams(location.search).get('fit')) fitPrint(); }
+(function(){
+  var p=new URLSearchParams(location.search);
+  var t=p.get('theme')||'dark';
+  document.body.className = t + (p.get('export')?' export':'');
+  document.getElementById('toggle').textContent = t==='dark' ? '☀ Light mode' : '☾ Dark mode';
+})();
+document.getElementById('toggle').addEventListener('click',function(){
+  var dark=document.body.classList.contains('dark');
+  document.body.classList.toggle('dark',!dark);
+  document.body.classList.toggle('light',dark);
+  this.textContent = dark ? '☾ Dark mode' : '☀ Light mode';
+  render();
+});
+document.getElementById('copyraw').addEventListener('click',function(){
+  var btn=this;
+  var txt=(document.getElementById('rawevents').textContent||'').trim();
+  function done(ok){
+    btn.textContent = ok ? '✓ Copied!' : 'Copy failed';
+    setTimeout(function(){ btn.textContent='⎘ Copy Raw Data'; },1600);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){done(true);},function(){fallback();});
+  } else { fallback(); }
+  function fallback(){
+    var ta=document.createElement('textarea');
+    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); done(ok);
+  }
+});
+render();
+</script>
+</body>
+</html>
